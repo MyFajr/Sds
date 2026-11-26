@@ -340,7 +340,10 @@ const BUILTIN_BG_IDS = new Set(BACKGROUNDS.map(item => item.id));
 const LEGACY_LIBRARY_PATH = '.obsidian/english-study-design-studio/user-library.json';
 const LIBRARY_SCHEMA = 3;
 // Keep legacy serialized role keys so existing palette files remain compatible: `en` now labels foreign-language text, `ipa` labels pronunciation/transcription.
-const ROLE_KEYS = ['en', 'ipa', 'translation', 'term', 'definition', 'focus', 'secondary', 'soft', 'heading', 'ink'];
+const ROLE_KEYS = ['en', 'letter', 'ipa', 'translation', 'term', 'definition', 'focus', 'secondary', 'soft', 'heading', 'ink'];
+const LEGACY_ROLE_KEYS = ROLE_KEYS.filter(key => key !== 'letter');
+const TABLE_COLOR_KEYS = ['background', 'text', 'headerBackground', 'headerText', 'border', 'stripeBackground'];
+const TABLE_COLUMN_COLOR_KEYS = ['background', 'text', 'headerBackground', 'headerText', 'border'];
 const CALLOUT_KEYS = CALLOUTS.map(([key]) => key);
 const BLOCK_FRAME_PRESET_KEYS = ['classic', 'dashed', 'dotted', 'double', 'left', 'none', 'top'];
 const THEME_PACK_SCHEMA_VERSION = 1;
@@ -753,20 +756,75 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function normalizePaletteTable(source) {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+  const result = {};
+  const normalizeSection = (input, keys) => {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+    const output = {};
+    keys.forEach(key => { if (isValidPaletteColor(input[key])) output[key] = colorToHex(input[key]); });
+    return Object.keys(output).length ? output : null;
+  };
+  result.header = normalizeSection(source.header, ['background', 'text', 'accent', 'border']);
+  result.body = normalizeSection(source.body, ['background', 'text', 'alternateBackground', 'selectedBackground', 'border']);
+  if (Array.isArray(source.columns)) {
+    const seen = new Set();
+    const columns = source.columns.slice(0, 20).map((column, position) => {
+      if (!column || typeof column !== 'object' || Array.isArray(column)) return null;
+      const index = Number.isInteger(Number(column.index)) ? Number(column.index) : position + 1;
+      if (index < 1 || index > 20 || seen.has(index)) return null;
+      seen.add(index);
+      const normalized = { index };
+      TABLE_COLUMN_COLOR_KEYS.concat(['accent']).forEach(key => { if (isValidPaletteColor(column[key])) normalized[key] = colorToHex(column[key]); });
+      return Object.keys(normalized).length > 1 ? normalized : null;
+    }).filter(Boolean);
+    if (columns.length) result.columns = columns;
+  }
+  if (source.header && source.body && (result.header || result.body)) return result;
+  // Accept the short-lived flat v4 preview draft as a compatibility bridge.
+  if (TABLE_COLOR_KEYS.some(key => isValidPaletteColor(source[key]))) {
+    result.header = result.header || {};
+    result.body = result.body || {};
+    if (isValidPaletteColor(source.headerBackground)) result.header.background = colorToHex(source.headerBackground);
+    if (isValidPaletteColor(source.headerText)) result.header.text = colorToHex(source.headerText);
+    if (isValidPaletteColor(source.border)) { result.header.border = colorToHex(source.border); result.body.border = colorToHex(source.border); }
+    if (isValidPaletteColor(source.background)) result.body.background = colorToHex(source.background);
+    if (isValidPaletteColor(source.text)) result.body.text = colorToHex(source.text);
+    if (isValidPaletteColor(source.stripeBackground)) result.body.alternateBackground = colorToHex(source.stripeBackground);
+    return result;
+  }
+  return result.header || result.body || result.columns ? result : null;
+}
+function paletteTableCss(selectors, table) {
+  if (!table) return '';
+  const vars = [];
+  const headerNames = { background:'header-bg', text:'header-text', accent:'header-accent', border:'header-border' };
+  const bodyNames = { background:'body-bg', text:'body-text', alternateBackground:'alternate-bg', selectedBackground:'selected-bg', border:'body-border' };
+  Object.entries(headerNames).forEach(([key, name]) => { if (table.header && table.header[key]) vars.push(`--esds-table-${name}:${table.header[key]};`); });
+  Object.entries(bodyNames).forEach(([key, name]) => { if (table.body && table.body[key]) vars.push(`--esds-table-${name}:${table.body[key]};`); });
+  (table.columns || []).forEach(column => {
+    const n = column.index;
+    const names = { background:'bg', text:'text', headerBackground:'header-bg', headerText:'header-text', accent:'accent', border:'border' };
+    Object.entries(names).forEach(([key, name]) => { if (column[key]) vars.push(`--esds-table-col-${n}-${name}:${column[key]};`); });
+  });
+  return vars.length ? `${selectors}{${vars.join('')}}` : '';
+}
 function makePaletteCss(palette) {
   const cls = `esds-palette-${palette.id}`;
   const roles = palette.roles || {};
   const callouts = palette.callouts || {};
   const darkRoles = palette.dark || roles;
   const darkCallouts = palette.darkCallouts || callouts;
+  const lightTable = normalizePaletteTable(palette.table);
+  const darkTable = normalizePaletteTable(palette.darkTable) || lightTable;
   const selectors = [
     `.markdown-preview-view.esds-note.${cls}`,
     `.markdown-source-view.esds-note.${cls}`,
     `.esds-preview.${cls}`
   ].join(',');
-  const roleVars = ROLE_KEYS.map(key => `--esds-${key}: ${isHexColor(roles[key]) ? roles[key] : '#777777'};`).join(' ');
+  const roleVars = ROLE_KEYS.map(key => { const value = isHexColor(roles[key]) ? roles[key] : (key === 'letter' && isHexColor(roles.en) ? roles.en : '#777777'); return `--esds-${key}: ${value};`; }).join(' ');
   const calloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(callouts[key])};`).join(' ');
-  const darkRoleVars = ROLE_KEYS.map(key => `--esds-${key}: ${isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(roles[key]) ? roles[key] : '#dddddd')};`).join(' ');
+  const darkRoleVars = ROLE_KEYS.map(key => { const fallback = key === 'letter' ? (darkRoles.en || roles.letter || roles.en) : roles[key]; const value = isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(fallback) ? fallback : '#dddddd'); return `--esds-${key}: ${value};`; }).join(' ');
   const darkCalloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(darkCallouts[key])};`).join(' ');
   const mapVars = (fill, text, border) => CALLOUT_KEYS.map(key => {
     const vars = [];
@@ -790,7 +848,7 @@ function makePaletteCss(palette) {
     const previewSelector = `${modePrefix}.esds-preview.esds-frames-from-palette.${cls} .esds-demo-callout.esds-callout-${type}`;
     return `${noteSelector},${previewSelector}{border-style:${preset.style} !important;border-width:${widths} !important;border-radius:${radius}px !important;}`;
   }).join('\n');
-  return `${selectors}{${roleVars} ${calloutVars} ${lightExtra}} ${darkSelectors}{${darkRoleVars} ${darkCalloutVars} ${darkExtra}}\n${frameCss('light')}\n${frameCss('dark')}`;
+  return `${selectors}{${roleVars} ${calloutVars} ${lightExtra}} ${darkSelectors}{${darkRoleVars} ${darkCalloutVars} ${darkExtra}}\n${paletteTableCss(selectors, lightTable)}\n${paletteTableCss(darkSelectors, darkTable)}\n${frameCss('light')}\n${frameCss('dark')}`;
 }
 
 function mergeStyleProps(base, override) {
@@ -1134,7 +1192,7 @@ class PreviewModal extends Modal {
   constructor(app, studio) { super(app); this.studio = studio; }
   onOpen() {
     this.modalEl.addClass('esds-preview-modal');
-    this.contentEl.addClass('esds-preview-modal-content');
+    this.contentEl.addClass('esds-preview-modal-content', 'esds-library-preview-content');
     this.render();
   }
   onClose() { this.contentEl.empty(); }
@@ -1148,10 +1206,10 @@ class PreviewModal extends Modal {
     title.createEl('h2', { text: 'Предпросмотр оформления' });
     title.createEl('p', { text: `${p.name} · ${b.label || b.name} · Геометрия рамок палитры` });
 
-    const preview = root.createDiv({ cls: `esds-preview ${p.id} esds-palette-${p.id} ${b.id} esds-frames-from-palette` });
+    const preview = root.createDiv({ cls: `esds-preview esds-library-large-preview ${p.id} esds-palette-${p.id} ${b.id} esds-frames-from-palette` });
     this.studio.renderPreview(preview);
 
-    const actions = root.createDiv({ cls: 'esds-preview-actions' });
+    const actions = root.createDiv({ cls: 'esds-preview-actions esds-library-preview-actions' });
     const apply = actions.createEl('button', { cls: 'esds-button esds-primary esds-btn-teal', text: '✓ Применить', attr: { type: 'button' } });
     apply.addEventListener('click', async () => {
       apply.disabled = true;
@@ -1310,12 +1368,13 @@ class PaletteBuilderModal extends Modal {
     lightBtn.addEventListener('click', () => { this.themeMode = 'light'; this.render(); });
     darkBtn.addEventListener('click', () => { this.themeMode = 'dark'; this.render(); });
     const swatches = body.createDiv({ cls: 'esds-color-grid' });
-    const labels = { en:'Иностранные слова', ipa:'Произношение / транскрипция', translation:'Перевод', term:'Термины', definition:'Определения', focus:'Главный акцент', secondary:'Второй акцент', soft:'Мягкий акцент', heading:'Заголовки', ink:'Основной текст' };
+    const labels = { en:'Иностранные слова и выражения', letter:'Иностранные буквы и короткие сочетания', ipa:'Произношение / транскрипция', translation:'Перевод', term:'Термины', definition:'Определения', focus:'Главный акцент', secondary:'Второй акцент', soft:'Мягкий акцент', heading:'Заголовки', ink:'Основной текст' };
     const currentRoles = this.themeMode === 'dark' ? (this.base.dark || this.base.roles) : this.base.roles;
     ROLE_KEYS.forEach(key => {
       const field = swatches.createDiv({ cls: 'esds-color-field' });
       field.createEl('label', { text: labels[key] });
-      const value = isHexColor(currentRoles[key]) ? currentRoles[key] : (this.base.roles[key] || '#777777');
+      const roleFallback = key === 'letter' ? (currentRoles.en || this.base.roles.en) : this.base.roles[key];
+      const value = isHexColor(currentRoles[key]) ? currentRoles[key] : (roleFallback || '#777777');
       const input = field.createEl('input', { attr: { type: 'color', value } });
       input.value = value; this.inputs[this.themeMode][key] = input;
       const editingMode = this.themeMode;
@@ -1325,6 +1384,53 @@ class PaletteBuilderModal extends Modal {
         if (this.palettePreview) this.palettePreview.style.setProperty(`--esds-${key}`, input.value);
       });
     });
+    const tableDetails = body.createEl('details', { cls: 'esds-palette-table-editor' });
+    tableDetails.createEl('summary', { text: 'Настройки таблиц и отдельных колонок' });
+    tableDetails.createEl('p', { cls: 'esds-section-note', text: 'Общие цвета задают основу. Цвета отдельных колонок можно настроить независимо; пустые параметры наследуют общие значения.' });
+    const tableModeKey = this.themeMode === 'dark' ? 'darkTable' : 'table';
+    const tableConfig = clone(this.base[tableModeKey] || (this.themeMode === 'dark' ? this.base.table : {}) || {});
+    tableConfig.header = tableConfig.header || {};
+    tableConfig.body = tableConfig.body || {};
+    const saveTableConfig = () => { this.base[tableModeKey] = clone(tableConfig); refreshLinkedPreview(); };
+    const tableSections = [
+      { key:'header', title:'Заголовок таблицы', fields:{background:'Фон заголовка',text:'Текст заголовка',accent:'Акцент заголовка',border:'Граница заголовка'}, fallbacks:{background:currentRoles.heading || '#51428d',text:'#ffffff',accent:currentRoles.focus || '#c66a08',border:currentRoles.heading || '#51428d'} },
+      { key:'body', title:'Ячейки таблицы', fields:{background:'Фон ячеек',text:'Текст ячеек',alternateBackground:'Чередующаяся строка',selectedBackground:'Выделенная строка',border:'Границы'}, fallbacks:{background:'#ffffff',text:currentRoles.ink || '#302d38',alternateBackground:'#f3f4f8',selectedBackground:'#fce9c9',border:'#d9d9d9'} }
+    ];
+    tableSections.forEach(section=>{
+      const heading=tableDetails.createEl('h4',{text:section.title});
+      heading.addClass('esds-table-columns-heading');
+      const grid=tableDetails.createDiv({cls:'esds-color-grid esds-table-base-grid'});
+      Object.entries(section.fields).forEach(([key,label])=>{
+        const field=grid.createDiv({cls:'esds-color-field'});
+        field.createEl('label',{text:label});
+        const value=isHexColor(tableConfig[section.key][key])?tableConfig[section.key][key]:section.fallbacks[key];
+        const input=field.createEl('input',{attr:{type:'color',value}});
+        input.addEventListener('input',()=>{tableConfig[section.key][key]=input.value;saveTableConfig();});
+      });
+    });
+    const columnsHeading=tableDetails.createEl('h4',{text:'Цвета отдельных колонок'});
+    columnsHeading.addClass('esds-table-columns-heading');
+    const columnsGrid=tableDetails.createDiv({cls:'esds-table-columns-grid'});
+    const columnLabels={background:'Фон ячеек',text:'Текст ячеек',headerBackground:'Фон заголовка',headerText:'Текст заголовка',accent:'Акцент заголовка',border:'Граница'};
+    const columnFallbacks={background:'#ffffff',text:currentRoles.ink || '#302d38',headerBackground:currentRoles.heading || '#51428d',headerText:'#ffffff',accent:currentRoles.focus || '#c66a08',border:'#d9d9d9'};
+    for(let index=1;index<=4;index++){
+      const column=columnsGrid.createDiv({cls:'esds-table-column-editor'});
+      column.createEl('strong',{text:`Колонка ${index}`});
+      const existingColumn=(tableConfig.columns||[]).find(item=>item.index===index)||{};
+      TABLE_COLUMN_COLOR_KEYS.concat(['accent']).forEach(key=>{
+        const field=column.createDiv({cls:'esds-color-field'});
+        field.createEl('label',{text:columnLabels[key]});
+        const value=isHexColor(existingColumn[key])?existingColumn[key]:columnFallbacks[key];
+        const input=field.createEl('input',{attr:{type:'color',value}});
+        input.addEventListener('input',()=>{
+          if(!Array.isArray(tableConfig.columns))tableConfig.columns=[];
+          const at=tableConfig.columns.findIndex(item=>item.index===index);
+          const next={...(at>=0?tableConfig.columns[at]:{}),index,[key]:input.value};
+          if(at>=0)tableConfig.columns[at]=next;else tableConfig.columns.push(next);
+          saveTableConfig();
+        });
+      });
+    }
     const calloutColorsSection = body.createDiv({ cls: 'esds-palette-callout-colors' });
     calloutColorsSection.createEl('h3', { text: 'Цвета информационных блоков' });
     calloutColorsSection.createEl('p', { cls: 'esds-section-note', text: 'Здесь задаются отдельные цвета и геометрия рамки каждого типа блока. Эти рамки применяются вместе с выбранной палитрой; настройки конкретной заметки могут их переопределить.' });
@@ -1420,6 +1526,12 @@ class PaletteBuilderModal extends Modal {
     termLine.createEl('span', { cls: 'st-de', text: 'краткое определение' });
     articleSample.createEl('p', { cls: 'st-mi', text: 'Главная мысль и смысловой акцент.' });
     articleSample.createEl('p', { cls: 'st-nu', text: 'Показатель: 3,5%' });
+    const tableSample = articleSample.createEl('table', { cls: 'esds-preview-table' });
+    const tableHead = tableSample.createEl('thead').createEl('tr');
+    ['Понятие','Значение','Пример'].forEach(label => tableHead.createEl('th',{text:label}));
+    const tableBody = tableSample.createEl('tbody');
+    const tableRow = tableBody.createEl('tr');
+    ['Термин','Определение','Контекст'].forEach(value => tableRow.createEl('td',{text:value}));
     this.studio.renderBlockGallery(this.palettePreview, ['rule', 'example', 'important', 'tip', 'warning', 'question']);
     const applyPaletteFramePreview = () => {
       this.palettePreview.querySelectorAll('.esds-demo-callout').forEach(node => {
@@ -1452,6 +1564,8 @@ class PaletteBuilderModal extends Modal {
       palette.defaultBlocks = palette.defaultBlocks || this.studio.selectedBlocks.id;
       palette.roles = { ...(palette.roles || {}) };
       palette.dark = { ...(palette.dark || palette.roles) };
+      if (!isHexColor(palette.roles.letter)) palette.roles.letter = palette.roles.en || '#2868d8';
+      if (!isHexColor(palette.dark.letter)) palette.dark.letter = palette.dark.en || palette.roles.letter;
       ROLE_KEYS.forEach(key => {
         if (this.inputs.light[key]) palette.roles[key] = this.inputs.light[key].value;
         if (this.inputs.dark[key]) palette.dark[key] = this.inputs.dark[key].value;
@@ -1620,6 +1734,29 @@ class CategoryManagerModal extends Modal {
           this.studio.plugin.userData.categories[this.kind] = list.filter(c => c.id !== cat.id);
           await this.studio.plugin.saveUserLibrary();
           this.render();
+        });
+        const merge = row.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Объединить…', attr: { type: 'button' } });
+        merge.addEventListener('click', async () => {
+          const destinations = list.filter(item => item.id !== cat.id);
+          if (!destinations.length) { new Notice('Сначала создай или выбери другую категорию.'); return; }
+          const names = destinations.map(item => item.name);
+          const targetName = prompt(`Перенести все элементы «${cat.name}» в категорию:\\n${names.join(' · ')}`, names[0]);
+          if (targetName === null || !targetName.trim()) return;
+          const target = destinations.find(item => item.name.toLocaleLowerCase() === targetName.trim().toLocaleLowerCase());
+          if (!target) { new Notice('Указанная категория не найдена.'); return; }
+          if (!confirm(`Объединить «${cat.name}» с «${target.name}»? Все палитры будут перемещены.`)) return;
+          const targetItems = this.kind === 'palettes' ? this.studio.plugin.userData.palettes : this.kind === 'backgrounds' ? this.studio.plugin.userData.backgrounds : this.studio.plugin.userData.blockStyles;
+          (targetItems || []).forEach(item => {
+            const current = this.kind === 'backgrounds' ? (item.group || item.category) : item.category;
+            if (current === cat.name) {
+              if (this.kind === 'backgrounds') { item.group = target.name; item.category = target.name; }
+              else item.category = target.name;
+            }
+          });
+          this.studio.plugin.userData.categories[this.kind] = list.filter(item => item.id !== cat.id);
+          await this.studio.plugin.saveUserLibrary();
+          this.render();
+          new Notice(`Категории объединены: «${cat.name}» → «${target.name}».`);
         });
       }
       if (index > 0) {
@@ -2332,6 +2469,10 @@ class DesignStudioModal extends Modal {
     createPalette.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const createBackground = actions.createEl('button', { cls: 'esds-button esds-btn-lime', text: '+ Создать фон', attr: { type: 'button' } });
     createBackground.addEventListener('click', () => new BackgroundBuilderModal(this.app, this).open());
+    const importPaletteZip = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт ZIP-коллекции', attr: { type: 'button' } });
+    importPaletteZip.addEventListener('click', () => this.pickPaletteZip(null));
+    const exportPaletteZip = actions.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ Экспорт категории ZIP', attr: { type: 'button' } });
+    exportPaletteZip.addEventListener('click', () => this.exportPaletteCategoryZip(null));
     const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитры', attr: { type: 'button' } });
     importPalette.addEventListener('click', () => this.pickJson('palette'));
     const importBackground = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт фона', attr: { type: 'button' } });
@@ -2360,12 +2501,12 @@ class DesignStudioModal extends Modal {
   paletteSwatches(palette) {
     const darkMode = document.body.classList.contains('theme-dark');
     const roleKeys = [
-      ['en', 'Иностранные слова'], ['ipa', 'Произношение / транскрипция'], ['translation', 'Перевод'],
+      ['en', 'Иностранные слова'], ['letter', 'Иностранные буквы'], ['ipa', 'Произношение / транскрипция'], ['translation', 'Перевод'],
       ['term', 'Термин'], ['focus', 'Акцент'], ['secondary', 'Второй акцент']
     ];
     return roleKeys.map(([key, label]) => ({
       label,
-      color: colorToHex((darkMode && palette.dark && palette.dark[key]) || (palette.roles && palette.roles[key]))
+      color: colorToHex((darkMode && palette.dark && palette.dark[key]) || (palette.roles && palette.roles[key]) || (key === 'letter' && palette.roles && palette.roles.en))
     }));
   }
   renderPaletteSection(parent) {
@@ -2376,6 +2517,10 @@ class DesignStudioModal extends Modal {
     const toolbar = parent.createDiv({ cls: 'esds-block-toolbar' });
     const createBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-violet', text: '＋ Создать палитру', attr: { type: 'button' } });
     createBtn.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
+    const zipImportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ ZIP-коллекция', attr: { type: 'button' } });
+    zipImportBtn.addEventListener('click', () => this.pickPaletteZip(this.paletteCategory || null));
+    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP категории', attr: { type: 'button' } });
+    zipExportBtn.addEventListener('click', () => this.exportPaletteCategoryZip(this.paletteCategory || null));
     const catBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Категории…', attr: { type: 'button' } });
     catBtn.addEventListener('click', () => this.openCategoryManager('palettes'));
     const search = parent.createEl('input', { cls: 'esds-text-input esds-palette-search', attr: { type: 'search', placeholder: 'Поиск по всем палитрам…' } });
@@ -2507,25 +2652,45 @@ class DesignStudioModal extends Modal {
     const sample = live.createDiv({ cls: 'esds-rich-sample' });
     sample.createEl('div', { cls: 'esds-rich-title', text: 'Образец оформления' });
     sample.createEl('div', { cls: 'esds-role st-fo', text: 'Foreign word · مصطلح · Begriff' });
-    sample.createEl('div', { cls: 'esds-role st-pr', text: 'Произношение / транскрипция' });
+    sample.createEl('div', { cls: 'esds-role st-lt', text: 'Foreign letters · ñ · th · sch' });
+    sample.createEl('div', { cls: 'esds-role st-pr', text: 'Произношение / транскрипция /fəˈnɛtɪks/' });
     sample.createEl('div', { cls: 'esds-role st-tr', text: 'Перевод или значение понятия' });
     const articleSample = sample.createDiv({ cls: 'esds-article-sample' });
-    articleSample.createEl('h3', { text: 'Краткий конспект' });
+    const hierarchy = articleSample.createDiv({ cls: 'esds-preview-heading-hierarchy' });
+    ['Заголовок заметки','Раздел материала','Подраздел','Тема блока','Уточнение','Малый заголовок'].forEach((text,index)=>hierarchy.createEl(`h${index+1}`,{text}));
     const termLine = articleSample.createEl('p');
     termLine.createEl('span', { cls: 'st-te', text: 'Термин' });
     termLine.appendText(' — ');
     termLine.createEl('span', { cls: 'st-de', text: 'краткое определение' });
-    articleSample.createEl('p', { cls: 'st-mi', text: 'Главная мысль и смысловой акцент.' });
-    articleSample.createEl('p', { cls: 'st-nu', text: 'Показатель: 3,5%' });
-    articleSample.createEl('blockquote', { text: 'Короткая цитата или важная выдержка из источника.' });
+    const semanticRoles = [
+      ['st-le','Вступление и контекст'],['st-mi','Главная мысль'],['st-ac','Дополнительный акцент'],['st-so','Мягкий акцент'],
+      ['st-te','Термин'],['st-fo','Foreign word'],['st-lt','ñ · th'],['st-tr','Перевод'],['st-pr','/ˈwɜːrd/'],['st-de','Определение'],
+      ['st-ex','Пример'],['st-im','Важное замечание'],['st-wa','Предупреждение'],['st-qu','Вопрос'],['st-su','Краткое резюме'],
+      ['st-co','Вывод'],['st-sc','Источник'],['st-no','Примечание'],['st-nu','42,5%'],['st-qt','Цитируемый фрагмент'],
+      ['st-fa','Факт'],['st-ar','Аргумент'],['st-ct','Контраргумент'],['st-ca','Причина'],['st-rs','Результат'],
+      ['st-da','2026'],['st-pe','Личность'],['st-ev','Событие'],['st-td','Тренд'],['st-ri','Риск']
+    ];
+    const semanticGrid = articleSample.createDiv({ cls: 'esds-semantic-preview-list' });
+    semanticRoles.forEach(([cls,text])=>semanticGrid.createEl('p',{cls,text}));
     const table = articleSample.createEl('table', { cls: 'esds-preview-table' });
     const thead = table.createEl('thead').createEl('tr');
-    thead.createEl('th', { text: 'Понятие' }); thead.createEl('th', { text: 'Значение' });
+    ['Понятие','Значение','Пример'].forEach(text=>thead.createEl('th',{text}));
     const tbody = table.createEl('tbody');
     const row = tbody.createEl('tr');
-    row.createEl('td', { text: 'Пример' }); row.createEl('td', { text: 'Образец данных' });
+    ['Термин','Определение','Контекст'].forEach(text=>row.createEl('td',{text}));
+    const alternateRow = tbody.createEl('tr');
+    ['Пример','Пояснение','Употребление'].forEach(text=>alternateRow.createEl('td',{text}));
+    const selectedRow = tbody.createEl('tr');
+    selectedRow.addClass('is-selected');
+    ['Выбрано','Активная строка','Акцент'].forEach(text=>selectedRow.createEl('td',{text}));
+    const list = articleSample.createEl('ul');
+    ['Первый пункт списка','Второй пункт списка'].forEach(text=>list.createEl('li',{text}));
+    const code = articleSample.createEl('pre');
+    code.createEl('code',{text:'const study = true;'});
+    articleSample.createEl('blockquote', { text: 'Короткая цитата или важная выдержка из источника.' });
+    articleSample.createEl('p').createEl('a',{text:'Пример ссылки',attr:{href:'#esds-preview-link'}});
     articleSample.createEl('hr');
-    this.renderBlockGallery(sample, ['rule', 'example', 'important', 'tip', 'warning', 'question']);
+    this.renderBlockGallery(sample, CALLOUT_KEYS);
   }
   openPaletteMenu(palette, anchorEl) {
     this.openItemMenu(anchorEl, [
@@ -2897,8 +3062,17 @@ class DesignStudioModal extends Modal {
     }
     const roles = darkMode && palette.dark ? palette.dark : palette.roles;
     if (roles) {
-      ROLE_KEYS.forEach(key => {
-        if (roles[key]) container.style.setProperty(`--esds-${key}`, roles[key]);
+      ROLE_KEYS.forEach(key => { const value = roles[key] || (key === 'letter' ? roles.en : null); if (value) container.style.setProperty(`--esds-${key}`, value); });
+    }
+    const tableTheme = normalizePaletteTable(darkMode ? (palette.darkTable || palette.table) : palette.table);
+    if (tableTheme) {
+      const headerNames={background:'header-bg',text:'header-text',accent:'header-accent',border:'header-border'};
+      const bodyNames={background:'body-bg',text:'body-text',alternateBackground:'alternate-bg',selectedBackground:'selected-bg',border:'body-border'};
+      Object.entries(headerNames).forEach(([key,name])=>{if(tableTheme.header?.[key])container.style.setProperty(`--esds-table-${name}`,tableTheme.header[key]);});
+      Object.entries(bodyNames).forEach(([key,name])=>{if(tableTheme.body?.[key])container.style.setProperty(`--esds-table-${name}`,tableTheme.body[key]);});
+      (tableTheme.columns||[]).forEach(column=>{
+        const names={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',accent:'accent',border:'border'};
+        Object.entries(names).forEach(([key,name])=>{if(column[key])container.style.setProperty(`--esds-table-col-${column.index}-${name}`,column[key]);});
       });
     }
     const callouts = darkMode && palette.darkCallouts ? palette.darkCallouts : palette.callouts;
@@ -3105,6 +3279,176 @@ class DesignStudioModal extends Modal {
     }
   }
 
+  async readPaletteZipEntries(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    let eocd = -1;
+    for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+      if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('ZIP-архив не распознан: отсутствует каталог ZIP.');
+    const count = view.getUint16(eocd + 10, true);
+    const directoryOffset = view.getUint32(eocd + 16, true);
+    const entries = [];
+    let offset = directoryOffset;
+    for (let n = 0; n < count; n++) {
+      if (view.getUint32(offset, true) !== 0x02014b50) throw new Error('Повреждён центральный каталог ZIP.');
+      const method = view.getUint16(offset + 10, true);
+      const compressedSize = view.getUint32(offset + 20, true);
+      const uncompressedSize = view.getUint32(offset + 24, true);
+      const nameLength = view.getUint16(offset + 28, true);
+      const extraLength = view.getUint16(offset + 30, true);
+      const commentLength = view.getUint16(offset + 32, true);
+      const localOffset = view.getUint32(offset + 42, true);
+      const name = new TextDecoder().decode(bytes.slice(offset + 46, offset + 46 + nameLength));
+      offset += 46 + nameLength + extraLength + commentLength;
+      if (!name.toLowerCase().endsWith('.json') || name.endsWith('/')) continue;
+      if (view.getUint32(localOffset, true) !== 0x04034b50) continue;
+      const localNameLength = view.getUint16(localOffset + 26, true);
+      const localExtraLength = view.getUint16(localOffset + 28, true);
+      const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+      const compressed = bytes.slice(dataStart, dataStart + compressedSize);
+      let data;
+      if (method === 0) data = compressed;
+      else if (method === 8) {
+        if (typeof DecompressionStream === 'undefined') throw new Error('На этом WebView нет ZIP-дефлятора. Обнови Android System WebView и повтори импорт.');
+        let stream;
+        try { stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw')); }
+        catch (error) { throw new Error('WebView не поддерживает распаковку DEFLATE в ZIP.'); }
+        data = new Uint8Array(await new Response(stream).arrayBuffer());
+      } else continue;
+      if (uncompressedSize && data.length !== uncompressedSize) throw new Error(`Размер JSON ${name} после распаковки не совпал.`);
+      entries.push({ name, text: new TextDecoder().decode(data) });
+    }
+    return entries;
+  }
+  async pickPaletteZip(defaultCategory = null) {
+    const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.zip,application/zip' } });
+    input.style.display = 'none';
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0]; if (!file) { input.remove(); return; }
+      try {
+        const baseName = file.name.replace(/\\.zip$/i, '').trim() || 'Импортированная коллекция';
+        const entries = await this.readPaletteZipEntries(await file.arrayBuffer());
+        const candidates = [];
+        const errors = [];
+        for (const entry of entries) {
+          try {
+            const parsed = JSON.parse(entry.text);
+            const raw = parsed.palette || parsed;
+            if (!raw || typeof raw !== 'object' || !raw.name || !raw.roles || !LEGACY_ROLE_KEYS.every(key => isHexColor(raw.roles[key]))) continue;
+            const schema = Number(parsed.schemaVersion || 1);
+            if (!Number.isInteger(schema) || schema < 1 || schema > 4) throw new Error('версия палитры не поддерживается');
+            candidates.push({ file: entry.name, data: parsed, palette: raw });
+          } catch (error) { errors.push(`${entry.name}: ${error.message || 'ошибка JSON'}`); }
+        }
+        if (!candidates.length) throw new Error('В ZIP не найдено корректных JSON-палитр ESDS.');
+        const categories = this.getCategories('palettes') || [];
+        const names = categories.map(item => item.name);
+        let destination = defaultCategory && names.includes(defaultCategory) ? defaultCategory : null;
+        const promptText = `В архиве ${candidates.length} палитр.\\nКатегории: ${names.join(' · ')}\\n\\nВведи название существующей категории, чтобы добавить туда. Оставь поле пустым — будет создана новая категория «${baseName}» из имени ZIP-файла.`;
+        const choice = prompt(promptText, destination || '');
+        if (choice === null) return;
+        destination = choice.trim();
+        const createNew = !destination;
+        if (createNew) destination = baseName;
+        const categoryExists = names.some(name => name.toLocaleLowerCase() === destination.toLocaleLowerCase());
+        if (createNew && categoryExists) destination = baseName + ' (импорт)';
+        if (!createNew && !categoryExists) {
+          const createInstead = confirm(`Категории «${destination}» нет. Создать её?`);
+          if (!createInstead) return;
+        }
+        const existing = this.allPalettes();
+        const seenIds = new Set(existing.map(item => String(item.id || '').toLowerCase()));
+        const seenNames = new Set(existing.map(item => String(item.name || '').trim().toLowerCase()));
+        const unique = [];
+        let skipped = 0;
+        for (const item of candidates) {
+          const id = String(item.palette.id || '').toLowerCase();
+          const name = String(item.palette.name || '').trim().toLowerCase();
+          if ((id && seenIds.has(id)) || (name && seenNames.has(name))) { skipped++; continue; }
+          if (id) seenIds.add(id); if (name) seenNames.add(name); unique.push(item);
+        }
+        if (!unique.length) {
+          new Notice(`Импорт отменён: все ${skipped} палитр уже есть в библиотеке.`);
+          return;
+        }
+        if (!confirm(`Добавить ${unique.length} палитр в категорию «${destination}»?\\nДубликаты будут пропущены (${skipped}).`)) return;
+        const before = clone(this.plugin.userData);
+        try {
+          let categoryList = this.plugin.userData.categories.palettes || [];
+          if (!categoryList.some(item => item.name.toLocaleLowerCase() === destination.toLocaleLowerCase())) {
+            const baseId = slugify(destination) || 'palette-category';
+            let id = baseId, suffix = 2;
+            while (categoryList.some(item => item.id === id)) id = `${baseId}-${suffix++}`;
+            categoryList = [...categoryList, { id, name: destination, order: categoryList.length + 10, protected: false }];
+            this.plugin.userData.categories.palettes = categoryList;
+          }
+          let added = 0;
+          for (const item of unique) {
+            const payload = clone(item.data);
+            const p = payload.palette || payload;
+            p.category = destination;
+            payload.palette = p;
+            await this.importJson('palette', payload);
+            added++;
+          }
+          new Notice(`ZIP импортирован: добавлено ${added}, дубликатов пропущено ${skipped}, ошибок JSON ${errors.length}.`);
+          if (errors.length) console.warn('ESDS ZIP import: invalid JSON entries', errors);
+          this.paletteCategory = destination;
+          this.activeView = 'studio'; this.activeSection = 'palette'; this.render();
+        } catch (error) {
+          this.plugin.userData = before;
+          await this.plugin.saveUserLibrary();
+          this.plugin.refreshGeneratedStyles();
+          throw error;
+        }
+      } catch (error) {
+        console.error('ESDS ZIP import failed:', error);
+        new Notice(`ZIP импорт не выполнен: ${error.message || 'неизвестная ошибка'}`);
+      } finally { input.remove(); }
+    });
+    input.click();
+  }
+  async exportPaletteCategoryZip(categoryName = null) {
+    const all = this.allPalettes();
+    const categories = [...new Set(all.map(item => item.category || 'Мои палитры'))];
+    let category = categoryName && categories.includes(categoryName) ? categoryName : null;
+    if (!category) {
+      category = prompt(`Какую категорию экспортировать?\\n${categories.join(' · ')}`, categories[0] || '');
+      if (category === null || !category.trim()) return;
+      category = category.trim();
+    }
+    const items = all.filter(item => (item.category || 'Мои палитры') === category);
+    if (!items.length) { new Notice(`В категории «${category}» нет палитр.`); return; }
+    const encoder = new TextEncoder();
+    const files = items.map((item, index) => ({ name: `${String(index + 1).padStart(3, '0')}-${slugify(item.name || 'palette')}.json`, data: encoder.encode(JSON.stringify({ schemaVersion: 4, type: 'esds-palette', palette: item }, null, 2)) }));
+    files.push({ name: 'collection-manifest.json', data: encoder.encode(JSON.stringify({ type: 'esds-palette-collection', name: category, exportedAt: new Date().toISOString(), paletteCount: items.length }, null, 2)) });
+    const crc32 = data => {
+      let crc = -1;
+      for (const byte of data) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0); }
+      return (crc ^ -1) >>> 0;
+    };
+    const chunks = [], central = []; let offset = 0;
+    const push16 = (arr, value) => { arr.push(value & 255, (value >>> 8) & 255); };
+    const push32 = (arr, value) => { arr.push(value & 255, (value >>> 8) & 255, (value >>> 16) & 255, (value >>> 24) & 255); };
+    for (const file of files) {
+      const name = encoder.encode(file.name), data = file.data, crc = crc32(data);
+      const local = []; push32(local, 0x04034b50); push16(local, 20); push16(local, 0); push16(local, 0); push16(local, 0); push16(local, 0); push32(local, crc); push32(local, data.length); push32(local, data.length); push16(local, name.length); push16(local, 0);
+      chunks.push(new Uint8Array([...local, ...name, ...data]));
+      const c = []; push32(c, 0x02014b50); push16(c, 20); push16(c, 20); push16(c, 0); push16(c, 0); push16(c, 0); push16(c, 0); push32(c, crc); push32(c, data.length); push32(c, data.length); push16(c, name.length); push16(c, 0); push16(c, 0); push16(c, 0); push16(c, 0); push32(c, 0); push32(c, offset);
+      central.push(new Uint8Array([...c, ...name])); offset += local.length + name.length + data.length;
+    }
+    const centralLength = central.reduce((sum, chunk) => sum + chunk.length, 0);
+    const end = []; push32(end, 0x06054b50); push16(end, 0); push16(end, 0); push16(end, files.length); push16(end, files.length); push32(end, centralLength); push32(end, offset); push16(end, 0);
+    const archive = new Uint8Array(offset + centralLength + end.length); let cursor = 0;
+    for (const chunk of [...chunks, ...central, new Uint8Array(end)]) { archive.set(chunk, cursor); cursor += chunk.length; }
+    const adapter = this.app.vault.adapter, folder = 'ESDS Exports';
+    if (!(await adapter.exists(folder))) await adapter.mkdir(folder);
+    const path = `${folder}/${slugify(category) || 'palette-collection'}-${Date.now()}.zip`;
+    await adapter.writeBinary(path, archive.buffer);
+    new Notice(`ZIP категории сохранён: ${path} · ${items.length} палитр`);
+  }
   pickJson(kind) {
     const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.json,.esds-theme.json,application/json' } });
     input.style.display = 'none';
@@ -3321,14 +3665,16 @@ class DesignStudioModal extends Modal {
     }
     if (kind === 'palette') {
       const paletteSchemaVersion = Number(data.schemaVersion || 1);
-      if (!Number.isInteger(paletteSchemaVersion) || paletteSchemaVersion < 1 || paletteSchemaVersion > 3) throw new Error('Версия формата палитры не поддерживается.');
+      if (!Number.isInteger(paletteSchemaVersion) || paletteSchemaVersion < 1 || paletteSchemaVersion > 4) throw new Error('Версия формата палитры не поддерживается.');
       let p = data.palette || data;
       const roles = p.roles || {};
-      if (!p.name || !ROLE_KEYS.every(key => isHexColor(roles[key]))) throw new Error('Palette roles are missing or invalid');
-      const palette = clone(p); palette.id = `user-${slugify(p.name)}-${Date.now().toString(36).slice(-4)}`; palette.createdAt = new Date().toISOString(); palette.updatedAt = palette.createdAt; palette.source = 'user';
+      if (!p.name || !LEGACY_ROLE_KEYS.every(key => isHexColor(roles[key]))) throw new Error('Palette roles are missing or invalid');
+      const palette = clone(p); palette.roles = { ...roles, letter: isHexColor(roles.letter) ? roles.letter : roles.ipa }; palette.id = `user-${slugify(p.name)}-${Date.now().toString(36).slice(-4)}`; palette.createdAt = new Date().toISOString(); palette.updatedAt = palette.createdAt; palette.source = 'user';
       palette.defaultBackground = this.findBackground(p.defaultBackground)?.id || this.selectedBackground.id;
       palette.defaultBlocks = this.findBlockStyle(p.defaultBlocks) ? p.defaultBlocks : this.selectedBlocks.id;
-      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : palette.roles[key]]));
+      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : (key === 'letter' ? (palette.dark?.en || palette.roles.letter || palette.roles.en) : palette.roles[key])]));
+      palette.table = normalizePaletteTable(palette.table) || undefined;
+      palette.darkTable = normalizePaletteTable(palette.darkTable) || palette.table || undefined;
       palette.callouts = palette.callouts || clone(PALETTES[0].callouts);
       palette.darkCallouts = palette.darkCallouts || clone(palette.callouts);
       ['calloutFills','calloutTexts','calloutBorders','darkCalloutFills','darkCalloutTexts','darkCalloutBorders'].forEach(mapName => {
@@ -3421,7 +3767,7 @@ class DesignStudioModal extends Modal {
     let item, payload;
     if (kind === 'palette') {
       item = this.selectedPalette;
-      payload = { schemaVersion: 3, type: 'esds-palette', palette: item };
+      payload = { schemaVersion: 4, type: 'esds-palette', palette: item };
     } else if (kind === 'background') {
       item = this.selectedBackground;
       payload = { schemaVersion: 2, type: 'esds-background', background: item };
@@ -4194,7 +4540,7 @@ module.exports = class EnglishStudyDesignStudio extends Plugin {
       style = document.getElementById('esds-generated-user-styles');
     }
     const palettes = [...PALETTES.map(makePaletteCss), ...(this.userData.palettes || [])
-      .filter(p => p && /^user-[a-z0-9-]+$/.test(p.id || '') && p.roles && ROLE_KEYS.every(k => isHexColor(p.roles[k])))
+      .filter(p => p && /^user-[a-z0-9-]+$/.test(p.id || '') && p.roles && LEGACY_ROLE_KEYS.every(k => isHexColor(p.roles[k])))
       .map(makePaletteCss)].join('\n');
     const backgrounds = (this.userData.backgrounds || [])
       .filter(bg => bg && /^bg-custom-[a-z0-9-]+$/.test(bg.id || '') && safeCssBackground(bg.light) && safeCssBackground(bg.dark || bg.light))

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "type": "esds-palette",
   "palette": {
     "name": "My Custom Palette",
@@ -24,7 +24,8 @@
       "secondary": "#b27a2d",
       "soft": "#8c6db0",
       "heading": "#51428d",
-      "ink": "#302d38"
+      "ink": "#302d38",
+      "letter": "#bd4a85"
     },
     "dark": {
       "en": "#9bc8ff",
@@ -36,7 +37,8 @@
       "secondary": "#efc77e",
       "soft": "#c6a8ed",
       "heading": "#d1c2ff",
-      "ink": "#f0edf5"
+      "ink": "#f0edf5",
+      "letter": "#f1a6d0"
     },
     "callouts": {
       "rule": [
@@ -595,6 +597,94 @@
         "width": 2,
         "radius": 10
       }
+    },
+    "table": {
+      "header": {
+        "background": "#F5E7D1",
+        "text": "#513A26",
+        "accent": "#C66A08",
+        "border": "#E7D8C2"
+      },
+      "body": {
+        "background": "#FFFFFF",
+        "text": "#382A20",
+        "alternateBackground": "#FFF8EF",
+        "selectedBackground": "#FCE9C9",
+        "border": "#E7D8C2"
+      },
+      "columns": [
+        {
+          "index": 1,
+          "background": "#FFFFFF",
+          "text": "#382A20",
+          "headerBackground": "#F5E7D1",
+          "headerText": "#513A26",
+          "accent": "#C66A08",
+          "border": "#E7D8C2"
+        },
+        {
+          "index": 2,
+          "background": "#FFFCF7",
+          "text": "#3B342B",
+          "headerBackground": "#F8EBD8",
+          "headerText": "#513A26",
+          "accent": "#C75037",
+          "border": "#E7D8C2"
+        },
+        {
+          "index": 3,
+          "background": "#FFF8EF",
+          "text": "#382A20",
+          "headerBackground": "#F5E7D1",
+          "headerText": "#513A26",
+          "accent": "#207A70",
+          "border": "#E7D8C2"
+        }
+      ]
+    },
+    "darkTable": {
+      "header": {
+        "background": "#343027",
+        "text": "#F4EBDD",
+        "accent": "#FFC56B",
+        "border": "#41463D"
+      },
+      "body": {
+        "background": "#202421",
+        "text": "#F4EBDD",
+        "alternateBackground": "#252A25",
+        "selectedBackground": "#3D3322",
+        "border": "#41463D"
+      },
+      "columns": [
+        {
+          "index": 1,
+          "background": "#202421",
+          "text": "#F4EBDD",
+          "headerBackground": "#343027",
+          "headerText": "#F4EBDD",
+          "accent": "#FFC56B",
+          "border": "#41463D"
+        },
+        {
+          "index": 2,
+          "background": "#222823",
+          "text": "#F4EBDD",
+          "headerBackground": "#3A342A",
+          "headerText": "#F4EBDD",
+          "accent": "#FF9277",
+          "border": "#41463D"
+        },
+        {
+          "index": 3,
+          "background": "#252A25",
+          "text": "#F4EBDD",
+          "headerBackground": "#343027",
+          "headerText": "#F4EBDD",
+          "accent": "#77D9C0",
+          "border": "#41463D"
+        }
+      ]
     }
   }
 }

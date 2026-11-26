@@ -1,0 +1,692 @@
+{
+  "schemaVersion": 4,
+  "type": "esds-palette",
+  "palette": {
+    "id": "tropical-22-mango-noir",
+    "name": "Mango Noir",
+    "mood": "Манго в глубокой тёмной палитре.",
+    "description": "Золотой манго на графитово-коричневой основе, выразительные янтарные и коралловые детали.",
+    "category": "Сочные и тропические",
+    "defaultBackground": "bg-25-rich-cocoa",
+    "defaultBlocks": "rich",
+    "swatches": [
+      "#B87414",
+      "#C45A3C",
+      "#86619E",
+      "#397C66",
+      "#BC8625"
+    ],
+    "roles": {
+      "en": "#B87414",
+      "letter": "#C45A3C",
+      "ipa": "#86619E",
+      "translation": "#397C66",
+      "term": "#A45C2E",
+      "definition": "#6E6257",
+      "focus": "#BC8625",
+      "secondary": "#B45B43",
+      "soft": "#836B5B",
+      "heading": "#8B551E",
+      "ink": "#382E28"
+    },
+    "dark": {
+      "en": "#FFD078",
+      "letter": "#FF967F",
+      "ipa": "#D1B1EC",
+      "translation": "#81D9B9",
+      "term": "#E9A27D",
+      "definition": "#D4C7BA",
+      "focus": "#FFD47D",
+      "secondary": "#F19B84",
+      "soft": "#CBB7A6",
+      "heading": "#F2C28A",
+      "ink": "#F3EAE0"
+    },
+    "callouts": {
+      "rule": [
+        139,
+        85,
+        30
+      ],
+      "example": [
+        134,
+        97,
+        158
+      ],
+      "important": [
+        188,
+        134,
+        37
+      ],
+      "tip": [
+        57,
+        124,
+        102
+      ],
+      "warning": [
+        180,
+        91,
+        67
+      ],
+      "question": [
+        184,
+        116,
+        20
+      ],
+      "practice": [
+        164,
+        92,
+        46
+      ],
+      "success": [
+        57,
+        124,
+        102
+      ],
+      "info": [
+        184,
+        116,
+        20
+      ],
+      "note": [
+        110,
+        98,
+        87
+      ],
+      "quote": [
+        134,
+        97,
+        158
+      ],
+      "abstract": [
+        131,
+        107,
+        91
+      ]
+    },
+    "darkCallouts": {
+      "rule": [
+        242,
+        194,
+        138
+      ],
+      "example": [
+        209,
+        177,
+        236
+      ],
+      "important": [
+        255,
+        212,
+        125
+      ],
+      "tip": [
+        129,
+        217,
+        185
+      ],
+      "warning": [
+        241,
+        155,
+        132
+      ],
+      "question": [
+        255,
+        208,
+        120
+      ],
+      "practice": [
+        233,
+        162,
+        125
+      ],
+      "success": [
+        129,
+        217,
+        185
+      ],
+      "info": [
+        255,
+        208,
+        120
+      ],
+      "note": [
+        212,
+        199,
+        186
+      ],
+      "quote": [
+        209,
+        177,
+        236
+      ],
+      "abstract": [
+        203,
+        183,
+        166
+      ]
+    },
+    "calloutFills": {
+      "rule": [
+        241,
+        235,
+        228
+      ],
+      "example": [
+        240,
+        236,
+        243
+      ],
+      "important": [
+        247,
+        240,
+        229
+      ],
+      "tip": [
+        231,
+        239,
+        237
+      ],
+      "warning": [
+        246,
+        235,
+        232
+      ],
+      "question": [
+        246,
+        238,
+        227
+      ],
+      "practice": [
+        244,
+        235,
+        230
+      ],
+      "success": [
+        231,
+        239,
+        237
+      ],
+      "info": [
+        246,
+        238,
+        227
+      ],
+      "note": [
+        238,
+        236,
+        235
+      ],
+      "quote": [
+        240,
+        236,
+        243
+      ],
+      "abstract": [
+        240,
+        237,
+        235
+      ]
+    },
+    "calloutTexts": {
+      "rule": [
+        56,
+        46,
+        40
+      ],
+      "example": [
+        56,
+        46,
+        40
+      ],
+      "important": [
+        56,
+        46,
+        40
+      ],
+      "tip": [
+        56,
+        46,
+        40
+      ],
+      "warning": [
+        56,
+        46,
+        40
+      ],
+      "question": [
+        56,
+        46,
+        40
+      ],
+      "practice": [
+        56,
+        46,
+        40
+      ],
+      "success": [
+        56,
+        46,
+        40
+      ],
+      "info": [
+        56,
+        46,
+        40
+      ],
+      "note": [
+        56,
+        46,
+        40
+      ],
+      "quote": [
+        56,
+        46,
+        40
+      ],
+      "abstract": [
+        56,
+        46,
+        40
+      ]
+    },
+    "calloutBorders": {
+      "rule": [
+        139,
+        85,
+        30
+      ],
+      "example": [
+        134,
+        97,
+        158
+      ],
+      "important": [
+        188,
+        134,
+        37
+      ],
+      "tip": [
+        57,
+        124,
+        102
+      ],
+      "warning": [
+        180,
+        91,
+        67
+      ],
+      "question": [
+        184,
+        116,
+        20
+      ],
+      "practice": [
+        164,
+        92,
+        46
+      ],
+      "success": [
+        57,
+        124,
+        102
+      ],
+      "info": [
+        184,
+        116,
+        20
+      ],
+      "note": [
+        110,
+        98,
+        87
+      ],
+      "quote": [
+        134,
+        97,
+        158
+      ],
+      "abstract": [
+        131,
+        107,
+        91
+      ]
+    },
+    "darkCalloutFills": {
+      "rule": [
+        78,
+        71,
+        56
+      ],
+      "example": [
+        71,
+        67,
+        78
+      ],
+      "important": [
+        81,
+        75,
+        53
+      ],
+      "tip": [
+        53,
+        76,
+        66
+      ],
+      "warning": [
+        78,
+        62,
+        55
+      ],
+      "question": [
+        81,
+        74,
+        52
+      ],
+      "practice": [
+        76,
+        64,
+        53
+      ],
+      "success": [
+        53,
+        76,
+        66
+      ],
+      "info": [
+        81,
+        74,
+        52
+      ],
+      "note": [
+        72,
+        72,
+        67
+      ],
+      "quote": [
+        71,
+        67,
+        78
+      ],
+      "abstract": [
+        70,
+        68,
+        62
+      ]
+    },
+    "darkCalloutTexts": {
+      "rule": [
+        243,
+        234,
+        224
+      ],
+      "example": [
+        243,
+        234,
+        224
+      ],
+      "important": [
+        243,
+        234,
+        224
+      ],
+      "tip": [
+        243,
+        234,
+        224
+      ],
+      "warning": [
+        243,
+        234,
+        224
+      ],
+      "question": [
+        243,
+        234,
+        224
+      ],
+      "practice": [
+        243,
+        234,
+        224
+      ],
+      "success": [
+        243,
+        234,
+        224
+      ],
+      "info": [
+        243,
+        234,
+        224
+      ],
+      "note": [
+        243,
+        234,
+        224
+      ],
+      "quote": [
+        243,
+        234,
+        224
+      ],
+      "abstract": [
+        243,
+        234,
+        224
+      ]
+    },
+    "darkCalloutBorders": {
+      "rule": [
+        242,
+        194,
+        138
+      ],
+      "example": [
+        209,
+        177,
+        236
+      ],
+      "important": [
+        255,
+        212,
+        125
+      ],
+      "tip": [
+        129,
+        217,
+        185
+      ],
+      "warning": [
+        241,
+        155,
+        132
+      ],
+      "question": [
+        255,
+        208,
+        120
+      ],
+      "practice": [
+        233,
+        162,
+        125
+      ],
+      "success": [
+        129,
+        217,
+        185
+      ],
+      "info": [
+        255,
+        208,
+        120
+      ],
+      "note": [
+        212,
+        199,
+        186
+      ],
+      "quote": [
+        209,
+        177,
+        236
+      ],
+      "abstract": [
+        203,
+        183,
+        166
+      ]
+    },
+    "calloutFrames": {
+      "rule": {
+        "preset": "classic",
+        "width": 1.4,
+        "radius": 10
+      },
+      "example": {
+        "preset": "dashed",
+        "width": 1.4,
+        "radius": 12
+      },
+      "important": {
+        "preset": "double",
+        "width": 2,
+        "radius": 14
+      },
+      "tip": {
+        "preset": "left",
+        "width": 1.4,
+        "radius": 9
+      },
+      "warning": {
+        "preset": "dotted",
+        "width": 1.8,
+        "radius": 8
+      },
+      "question": {
+        "preset": "top",
+        "width": 1.4,
+        "radius": 10
+      },
+      "practice": {
+        "preset": "none",
+        "width": 1.4,
+        "radius": 12
+      },
+      "success": {
+        "preset": "classic",
+        "width": 1.4,
+        "radius": 14
+      },
+      "info": {
+        "preset": "dashed",
+        "width": 1.4,
+        "radius": 9
+      },
+      "note": {
+        "preset": "double",
+        "width": 1.4,
+        "radius": 8
+      },
+      "quote": {
+        "preset": "left",
+        "width": 1.4,
+        "radius": 10
+      },
+      "abstract": {
+        "preset": "dotted",
+        "width": 1.4,
+        "radius": 12
+      }
+    },
+    "table": {
+      "header": {
+        "background": "#EBE2D9",
+        "text": "#382E28",
+        "accent": "#BC8625",
+        "border": "#CEB8A1"
+      },
+      "body": {
+        "background": "#FFFFFF",
+        "text": "#382E28",
+        "alternateBackground": "#FBF6F5",
+        "selectedBackground": "#FAF1E1",
+        "border": "#E2D5C7"
+      },
+      "columns": [
+        {
+          "index": 1,
+          "background": "#FDFCF9",
+          "text": "#382E28",
+          "headerBackground": "#F4EADC",
+          "headerText": "#382E28",
+          "accent": "#B87414",
+          "border": "#E8D3B4"
+        },
+        {
+          "index": 2,
+          "background": "#FAFCFB",
+          "text": "#382E28",
+          "headerBackground": "#E2ECE9",
+          "headerText": "#382E28",
+          "accent": "#397C66",
+          "border": "#C0D6CF"
+        },
+        {
+          "index": 3,
+          "background": "#FDFBFA",
+          "text": "#382E28",
+          "headerBackground": "#F4E6E3",
+          "headerText": "#382E28",
+          "accent": "#B45B43",
+          "border": "#E7CBC3"
+        }
+      ]
+    },
+    "darkTable": {
+      "header": {
+        "background": "#5B503E",
+        "text": "#F3EAE0",
+        "accent": "#FFD47D",
+        "border": "#9E8360"
+      },
+      "body": {
+        "background": "#202421",
+        "text": "#F3EAE0",
+        "alternateBackground": "#39322D",
+        "selectedBackground": "#514B35",
+        "border": "#41463D"
+      },
+      "columns": [
+        {
+          "index": 1,
+          "background": "#2A2C25",
+          "text": "#F3EAE0",
+          "headerBackground": "#564D36",
+          "headerText": "#F3EAE0",
+          "accent": "#FFD078",
+          "border": "#847148"
+        },
+        {
+          "index": 2,
+          "background": "#242C28",
+          "text": "#F3EAE0",
+          "headerBackground": "#374F45",
+          "headerText": "#F3EAE0",
+          "accent": "#81D9B9",
+          "border": "#4C7565"
+        },
+        {
+          "index": 3,
+          "background": "#292925",
+          "text": "#F3EAE0",
+          "headerBackground": "#524139",
+          "headerText": "#F3EAE0",
+          "accent": "#F19B84",
+          "border": "#7E5A4E"
+        }
+      ]
+    }
+  }
+}

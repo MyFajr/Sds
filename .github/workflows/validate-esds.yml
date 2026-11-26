@@ -1,0 +1,45 @@
+name: Validate ESDS 0.9.21
+
+on:
+  push:
+    branches:
+      - work/esds-0.9.21-full-implementation
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: node --check main.js
+      - name: Validate schemas, compatibility and palette collection
+        run: node tests/validate-esds.js
+      - name: Build plugin archive
+        run: zip -j ESDS_0.9.21.zip main.js styles.css manifest.json versions.json
+      - name: Build tropical palette archive
+        run: zip -j ESDS_06_Juicy_Tropical_25.zip palettes/06-juicy-tropical/*.json palettes/06-juicy-tropical/README.md
+      - name: Verify archives
+        run: |
+          unzip -t ESDS_0.9.21.zip
+          unzip -t ESDS_06_Juicy_Tropical_25.zip
+          if unzip -l ESDS_0.9.21.zip | grep -q 'data.json'; then exit 1; fi
+      - name: Upload verified archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: ESDS-0.9.21-and-Tropical-Palettes
+          path: |
+            ESDS_0.9.21.zip
+            ESDS_06_Juicy_Tropical_25.zip
+          if-no-files-found: error
+          retention-days: 30

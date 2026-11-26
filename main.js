@@ -2479,7 +2479,7 @@ class DesignStudioModal extends Modal {
     ];
     return roleKeys.map(([key, label]) => ({
       label,
-      color: colorToHex((darkMode && palette.dark && palette.dark[key]) || (palette.roles && palette.roles[key]))
+      color: colorToHex((darkMode && palette.dark && palette.dark[key]) || (palette.roles && palette.roles[key]) || (key === 'letter' && palette.roles && palette.roles.en))
     }));
   }
   renderPaletteSection(parent) {
@@ -3011,7 +3011,7 @@ class DesignStudioModal extends Modal {
     }
     const roles = darkMode && palette.dark ? palette.dark : palette.roles;
     if (roles) {
-      ROLE_KEYS.forEach(key => { const value = roles[key] || (key === 'letter' ? roles.ipa : null); if (value) container.style.setProperty(`--esds-${key}`, value); });
+      ROLE_KEYS.forEach(key => { const value = roles[key] || (key === 'letter' ? roles.en : null); if (value) container.style.setProperty(`--esds-${key}`, value); });
     }
     const tableTheme = normalizePaletteTable(darkMode ? (palette.darkTable || palette.table) : palette.table);
     if (tableTheme) {

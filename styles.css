@@ -4377,7 +4377,7 @@ body.theme-dark .esds-preview.bg-28-saffron-cream, .esds-preview.esds-preview-da
 .esds-zip-export-group { display:flex; flex-direction:column; gap:6px; }
 .esds-zip-export-group > strong { padding:5px 2px; color:var(--text-muted); font-size:var(--font-sm); }
 .esds-zip-export-row { display:flex; align-items:center; gap:10px; min-height:42px; padding:8px 10px; border:1px solid var(--background-modifier-border); border-radius:10px; background:var(--background-primary); cursor:pointer; }
-.esds-zip-export-row:has(input:checked) { border-color:var(--interactive-accent); background:var(--background-secondary); }
+.esds-zip-export-row.is-selected { border-color:var(--interactive-accent); background:var(--background-secondary); }
 .esds-zip-export-row input { flex:0 0 auto; width:18px; height:18px; margin:0; accent-color:var(--interactive-accent); }
 .esds-zip-export-label { min-width:0; overflow-wrap:anywhere; color:var(--text-normal); }
 .esds-zip-export-actions { justify-content:flex-end; padding-top:4px; }

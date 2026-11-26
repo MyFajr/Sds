@@ -4319,7 +4319,7 @@ module.exports = class EnglishStudyDesignStudio extends Plugin {
       style = document.getElementById('esds-generated-user-styles');
     }
     const palettes = [...PALETTES.map(makePaletteCss), ...(this.userData.palettes || [])
-      .filter(p => p && /^user-[a-z0-9-]+$/.test(p.id || '') && p.roles && ROLE_KEYS.every(k => isHexColor(p.roles[k])))
+      .filter(p => p && /^user-[a-z0-9-]+$/.test(p.id || '') && p.roles && LEGACY_ROLE_KEYS.every(k => isHexColor(p.roles[k])))
       .map(makePaletteCss)].join('\n');
     const backgrounds = (this.userData.backgrounds || [])
       .filter(bg => bg && /^bg-custom-[a-z0-9-]+$/.test(bg.id || '') && safeCssBackground(bg.light) && safeCssBackground(bg.dark || bg.light))

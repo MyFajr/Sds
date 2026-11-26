@@ -283,8 +283,6 @@ Complete the sentences with information about your real life.
 
 ## 10. Mini self-test
 
-{@not-a-real-interactive-widget}
-
 Translate into English:
 
 1. Я обычно просыпаюсь в семь.

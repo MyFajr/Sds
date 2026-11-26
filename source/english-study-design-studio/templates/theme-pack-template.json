@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "type": "esds-theme-pack",
+  "plugin": "english-study-design-studio",
+  "name": "Cobalt Orchid — пример дизайнерского набора",
+  "description": "Пример полного набора для проверки импорта: палитра, фон и блоки.",
+  "items": {
+    "palette": {
+      "id": "template-palette",
+      "name": "Cobalt Orchid",
+      "mood": "Холодная кобальтовая палитра с орхидеевыми акцентами",
+      "description": "Умеренно контрастный дизайн для статей, заметок и учебных материалов.",
+      "roles": {
+        "en": "#2868D8",
+        "ipa": "#9251BD",
+        "translation": "#16845E",
+        "term": "#A23B83",
+        "definition": "#53627D",
+        "focus": "#E74E70",
+        "secondary": "#C27A18",
+        "soft": "#9555B5",
+        "heading": "#6540A2",
+        "ink": "#352A45"
+      },
+      "dark": {
+        "en": "#8FC1FF",
+        "ipa": "#D4A4F2",
+        "translation": "#82DDB4",
+        "term": "#F0A5D7",
+        "definition": "#BDC1D6",
+        "focus": "#FF91AA",
+        "secondary": "#F2C078",
+        "soft": "#D1A2F0",
+        "heading": "#D0B3FF",
+        "ink": "#F0E8F7"
+      },
+      "callouts": {
+        "rule": [
+          48,
+          112,
+          210
+        ],
+        "example": [
+          142,
+          82,
+          194
+        ],
+        "important": [
+          228,
+          72,
+          112
+        ],
+        "tip": [
+          31,
+          145,
+          103
+        ],
+        "warning": [
+          209,
+          132,
+          34
+        ],
+        "question": [
+          25,
+          151,
+          177
+        ],
+        "practice": [
+          223,
+          111,
+          48
+        ],
+        "success": [
+          28,
+          153,
+          102
+        ],
+        "info": [
+          67,
+          111,
+          207
+        ],
+        "note": [
+          119,
+          111,
+          151
+        ],
+        "quote": [
+          194,
+          82,
+          143
+        ],
+        "abstract": [
+          125,
+          83,
+          185
+        ]
+      },
+      "darkCallouts": {
+        "rule": [
+          112,
+          166,
+          255
+        ],
+        "example": [
+          194,
+          146,
+          235
+        ],
+        "important": [
+          255,
+          137,
+          169
+        ],
+        "tip": [
+          105,
+          214,
+          170
+        ],
+        "warning": [
+          247,
+          193,
+          112
+        ],
+        "question": [
+          99,
+          211,
+          231
+        ],
+        "practice": [
+          255,
+          164,
+          112
+        ],
+        "success": [
+          103,
+          219,
+          163
+        ],
+        "info": [
+          133,
+          171,
+          255
+        ],
+        "note": [
+          185,
+          177,
+          215
+        ],
+        "quote": [
+          241,
+          143,
+          203
+        ],
+        "abstract": [
+          185,
+          149,
+          239
+        ]
+      },
+      "swatches": [
+        "#2868D8",
+        "#9251BD",
+        "#16845E",
+        "#E74E70",
+        "#C27A18"
+      ],
+      "defaultBackground": "template-background",
+      "defaultBlocks": "template-blocks",
+      "calloutFrames": {
+        "rule": {
+          "preset": "classic",
+          "width": 1.5,
+          "radius": 12
+        },
+        "example": {
+          "preset": "dashed",
+          "width": 2,
+          "radius": 10
+        },
+        "important": {
+          "preset": "double",
+          "width": 3,
+          "radius": 8
+        },
+        "tip": {
+          "preset": "dotted",
+          "width": 2,
+          "radius": 12
+        },
+        "warning": {
+          "preset": "left",
+          "width": 3,
+          "radius": 8
+        },
+        "question": {
+          "preset": "top",
+          "width": 2,
+          "radius": 8
+        },
+        "practice": {
+          "preset": "dashed",
+          "width": 1.5,
+          "radius": 10
+        },
+        "success": {
+          "preset": "classic",
+          "width": 1.5,
+          "radius": 12
+        },
+        "info": {
+          "preset": "classic",
+          "width": 1.5,
+          "radius": 10
+        },
+        "note": {
+          "preset": "left",
+          "width": 2,
+          "radius": 10
+        },
+        "quote": {
+          "preset": "dotted",
+          "width": 2,
+          "radius": 12
+        },
+        "abstract": {
+          "preset": "double",
+          "width": 2,
+          "radius": 10
+        }
+      }
+    },
+    "background": {
+      "id": "template-background",
+      "name": "Orchid Mist",
+      "label": "Orchid Mist",
+      "group": "Мягкие градиенты",
+      "light": "linear-gradient(135deg, #F6F3FF 0%, #EAF2FF 100%)",
+      "dark": "linear-gradient(135deg, #1C1B2C 0%, #222A3A 100%)",
+      "textColor": "#352A45",
+      "darkTextColor": "#F0E8F7"
+    },
+    "blockStyle": {
+      "id": "template-blocks",
+      "name": "Orchid Frames",
+      "description": "Мягкая заливка, аккуратные отступы и выразительные боковые акценты.",
+      "category": "Мои стили",
+      "base": "soft",
+      "framePreset": "classic",
+      "frameOverrides": {
+        "important": "double",
+        "warning": "left",
+        "question": "top"
+      },
+      "style": {
+        "light": {
+          "backgroundOpacity": 0.14,
+          "borderOpacity": 0.62,
+          "borderWidth": 1.5,
+          "borderRadius": 13,
+          "paddingY": 10,
+          "paddingX": 12,
+          "gap": 8,
+          "titleWeight": 650,
+          "titleSize": 13,
+          "bodySize": 12
+        },
+        "dark": {
+          "backgroundOpacity": 0.2,
+          "borderOpacity": 0.72,
+          "borderWidth": 1.5,
+          "borderRadius": 13,
+          "paddingY": 10,
+          "paddingX": 12,
+          "gap": 8,
+          "titleWeight": 650,
+          "titleSize": 13,
+          "bodySize": 12
+        }
+      },
+      "calloutOverrides": {
+        "important": {
+          "light": {
+            "backgroundOpacity": 0.22,
+            "borderOpacity": 0.92
+          },
+          "dark": {
+            "backgroundOpacity": 0.28,
+            "borderOpacity": 0.95
+          }
+        }
+      },
+      "colors": {
+        "light": {},
+        "dark": {}
+      },
+      "previewCallouts": [
+        "rule",
+        "example",
+        "important",
+        "tip",
+        "warning",
+        "question"
+      ]
+    }
+  },
+  "frameSource": "blockStyle"
+}

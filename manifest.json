@@ -3,7 +3,7 @@
   "name": "English Study Design Studio",
   "version": "0.9.20",
   "minAppVersion": "1.5.0",
-  "description": "Semantic study-note design studio: accessible focus flow, animated accordion, polished controls, import/export and live previews.",
+  "description": "Semantic study-note design studio with accessible UI, palette category import/export, ZIP collections and live previews.",
   "author": "Custom personal plugin",
   "isDesktopOnly": false
 }

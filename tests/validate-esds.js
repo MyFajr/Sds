@@ -37,6 +37,15 @@ const contrastRatio = (a,b) => { const x=luminance(a), y=luminance(b); return (M
 const dir = path.join(root, 'palettes/06-juicy-tropical');
 const files = fs.readdirSync(dir).filter(name => /^\d{2}_.*\.json$/.test(name)).sort();
 assert.equal(files.length, 25, 'expected exactly 25 tropical palette JSON files');
+const backgroundSource = main.match(/const BACKGROUNDS = \\[([\\s\\S]*?)\\n\\];/);
+const blockSource = main.match(/const BUILTIN_BLOCK_STYLES = \\[([\\s\\S]*?)\\n\\];/);
+assert.ok(backgroundSource && blockSource, 'built-in background and block registries must exist');
+const backgroundIds = new Set([...backgroundSource[1].matchAll(/id:\\s*'([^']+)'/g)].map(match => match[1]));
+const blockIds = new Set([...blockSource[1].matchAll(/id:\\s*'([^']+)'/g)].map(match => match[1]));
+const previewClasses = ['st-le','st-mi','st-ac','st-so','st-te','st-fo','st-lt','st-tr','st-pr','st-de','st-ex','st-im','st-wa','st-qu','st-su','st-co','st-sc','st-no','st-nu','st-qt','st-fa','st-ar','st-ct','st-ca','st-rs','st-da','st-pe','st-ev','st-td','st-ri'];
+for (const className of previewClasses) assert.ok(main.includes(`['${className}'`), 'palette preview must include ' + className);
+assert.ok(main.includes('this.renderBlockGallery(sample, CALLOUT_KEYS)'), 'palette preview must include all 12 Callout types');
+assert.ok(main.includes("selectedRow.addClass('is-selected')"), 'palette preview must show selected table rows');
 const names = [];
 for (const file of files) {
   const payload = JSON.parse(fs.readFileSync(path.join(dir,file),'utf8'));
@@ -44,6 +53,8 @@ for (const file of files) {
   assert.equal(payload.type, 'esds-palette', file);
   const p = payload.palette;
   names.push(p.name);
+  assert.ok(backgroundIds.has(p.defaultBackground), file + ' default background must exist');
+  assert.ok(blockIds.has(p.defaultBlocks), file + ' default block style must exist');
   for (const key of roleKeys) {
     assert.match(p.roles[key], /^#[0-9a-f]{6}$/i, file + ' roles.' + key);
     assert.match(p.dark[key], /^#[0-9a-f]{6}$/i, file + ' dark.' + key);
@@ -54,6 +65,8 @@ for (const file of files) {
     assert.ok(p.callouts[key], file + ' callouts.' + key);
     assert.ok(p.darkCallouts[key], file + ' darkCallouts.' + key);
     assert.ok(p.calloutFrames[key], file + ' calloutFrames.' + key);
+    assert.ok(contrastRatio(p.calloutTexts[key], p.calloutFills[key]) >= 4.5, file + ' Callout text/fill contrast ' + key);
+    assert.ok(contrastRatio(p.darkCalloutTexts[key], p.darkCalloutFills[key]) >= 4.5, file + ' dark Callout text/fill contrast ' + key);
   }
   for (const mode of ['table','darkTable']) {
     assert.ok(p[mode].header && p[mode].body, file + ' ' + mode + ' header/body');

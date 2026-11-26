@@ -12,20 +12,20 @@
     "swatches": [
       "#C66A08",
       "#C75037",
-      "#9362A0",
+      "#8E5F9A",
       "#207A70",
       "#C66A08"
     ],
     "roles": {
       "en": "#C66A08",
       "letter": "#C75037",
-      "ipa": "#9362A0",
+      "ipa": "#8E5F9A",
       "translation": "#207A70",
       "term": "#A94D32",
       "definition": "#705B49",
       "focus": "#C66A08",
       "secondary": "#C75037",
-      "soft": "#A88491",
+      "soft": "#836771",
       "heading": "#8E4C25",
       "ink": "#382A20"
     },
@@ -49,9 +49,9 @@
         37
       ],
       "example": [
-        147,
-        98,
-        160
+        142,
+        95,
+        154
       ],
       "important": [
         198,
@@ -94,14 +94,14 @@
         73
       ],
       "quote": [
-        147,
-        98,
-        160
+        142,
+        95,
+        154
       ],
       "abstract": [
-        168,
-        132,
-        145
+        131,
+        103,
+        113
       ]
     },
     "darkCallouts": {
@@ -173,9 +173,9 @@
         229
       ],
       "example": [
-        242,
+        241,
         236,
-        244
+        243
       ],
       "important": [
         248,
@@ -218,14 +218,14 @@
         233
       ],
       "quote": [
-        242,
+        241,
         236,
-        244
+        243
       ],
       "abstract": [
-        245,
         240,
-        242
+        237,
+        238
       ]
     },
     "calloutTexts": {
@@ -297,9 +297,9 @@
         37
       ],
       "example": [
-        147,
-        98,
-        160
+        142,
+        95,
+        154
       ],
       "important": [
         198,
@@ -342,14 +342,14 @@
         73
       ],
       "quote": [
-        147,
-        98,
-        160
+        142,
+        95,
+        154
       ],
       "abstract": [
-        168,
-        132,
-        145
+        131,
+        103,
+        113
       ]
     },
     "darkCalloutFills": {
@@ -630,7 +630,7 @@
           "text": "#382A20",
           "headerBackground": "#F7EBDD",
           "headerText": "#513A26",
-          "accent": "#C75037",
+          "accent": "#207A70",
           "border": "#E7D8C2"
         },
         {
@@ -639,7 +639,7 @@
           "text": "#382A20",
           "headerBackground": "#F5E7D1",
           "headerText": "#513A26",
-          "accent": "#207A70",
+          "accent": "#C75037",
           "border": "#E7D8C2"
         }
       ]
@@ -674,7 +674,7 @@
           "text": "#F4EBDD",
           "headerBackground": "#3A342A",
           "headerText": "#F4EBDD",
-          "accent": "#FF9277",
+          "accent": "#77D9C0",
           "border": "#41463D"
         },
         {
@@ -683,7 +683,7 @@
           "text": "#F4EBDD",
           "headerBackground": "#343027",
           "headerText": "#F4EBDD",
-          "accent": "#77D9C0",
+          "accent": "#FF9277",
           "border": "#41463D"
         }
       ]

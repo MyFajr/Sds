@@ -1735,6 +1735,29 @@ class CategoryManagerModal extends Modal {
           await this.studio.plugin.saveUserLibrary();
           this.render();
         });
+        const merge = row.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Объединить…', attr: { type: 'button' } });
+        merge.addEventListener('click', async () => {
+          const destinations = list.filter(item => item.id !== cat.id);
+          if (!destinations.length) { new Notice('Сначала создай или выбери другую категорию.'); return; }
+          const names = destinations.map(item => item.name);
+          const targetName = prompt(`Перенести все элементы «${cat.name}» в категорию:\\n${names.join(' · ')}`, names[0]);
+          if (targetName === null || !targetName.trim()) return;
+          const target = destinations.find(item => item.name.toLocaleLowerCase() === targetName.trim().toLocaleLowerCase());
+          if (!target) { new Notice('Указанная категория не найдена.'); return; }
+          if (!confirm(`Объединить «${cat.name}» с «${target.name}»? Все палитры будут перемещены.`)) return;
+          const targetItems = this.kind === 'palettes' ? this.studio.plugin.userData.palettes : this.kind === 'backgrounds' ? this.studio.plugin.userData.backgrounds : this.studio.plugin.userData.blockStyles;
+          (targetItems || []).forEach(item => {
+            const current = this.kind === 'backgrounds' ? (item.group || item.category) : item.category;
+            if (current === cat.name) {
+              if (this.kind === 'backgrounds') { item.group = target.name; item.category = target.name; }
+              else item.category = target.name;
+            }
+          });
+          this.studio.plugin.userData.categories[this.kind] = list.filter(item => item.id !== cat.id);
+          await this.studio.plugin.saveUserLibrary();
+          this.render();
+          new Notice(`Категории объединены: «${cat.name}» → «${target.name}».`);
+        });
       }
       if (index > 0) {
         const up = row.createEl('button', { cls: 'esds-button esds-btn-quiet', text: '↑', attr: { type: 'button', title: 'Выше' } });

@@ -1209,7 +1209,7 @@ class PreviewModal extends Modal {
     const preview = root.createDiv({ cls: `esds-preview esds-library-large-preview ${p.id} esds-palette-${p.id} ${b.id} esds-frames-from-palette` });
     this.studio.renderPreview(preview);
 
-    const actions = root.createDiv({ cls: 'esds-preview-actions' });
+    const actions = root.createDiv({ cls: 'esds-preview-actions esds-library-preview-actions' });
     const apply = actions.createEl('button', { cls: 'esds-button esds-primary esds-btn-teal', text: '✓ Применить', attr: { type: 'button' } });
     apply.addEventListener('click', async () => {
       apply.disabled = true;
@@ -2621,25 +2621,40 @@ class DesignStudioModal extends Modal {
     const sample = live.createDiv({ cls: 'esds-rich-sample' });
     sample.createEl('div', { cls: 'esds-rich-title', text: 'Образец оформления' });
     sample.createEl('div', { cls: 'esds-role st-fo', text: 'Foreign word · مصطلح · Begriff' });
-    sample.createEl('div', { cls: 'esds-role st-pr', text: 'Произношение / транскрипция' });
+    sample.createEl('div', { cls: 'esds-role st-lt', text: 'Foreign letters · ñ · th · sch' });
+    sample.createEl('div', { cls: 'esds-role st-pr', text: 'Произношение / транскрипция /fəˈnɛtɪks/' });
     sample.createEl('div', { cls: 'esds-role st-tr', text: 'Перевод или значение понятия' });
     const articleSample = sample.createDiv({ cls: 'esds-article-sample' });
-    articleSample.createEl('h3', { text: 'Краткий конспект' });
+    const hierarchy = articleSample.createDiv({ cls: 'esds-preview-heading-hierarchy' });
+    ['Заголовок заметки','Раздел материала','Подраздел','Тема блока','Уточнение','Малый заголовок'].forEach((text,index)=>hierarchy.createEl(`h${index+1}`,{text}));
     const termLine = articleSample.createEl('p');
     termLine.createEl('span', { cls: 'st-te', text: 'Термин' });
     termLine.appendText(' — ');
     termLine.createEl('span', { cls: 'st-de', text: 'краткое определение' });
-    articleSample.createEl('p', { cls: 'st-mi', text: 'Главная мысль и смысловой акцент.' });
-    articleSample.createEl('p', { cls: 'st-nu', text: 'Показатель: 3,5%' });
-    articleSample.createEl('blockquote', { text: 'Короткая цитата или важная выдержка из источника.' });
+    const semanticRoles = [
+      ['st-le','Вступление и контекст'],['st-mi','Главная мысль'],['st-ac','Дополнительный акцент'],['st-so','Мягкий акцент'],
+      ['st-te','Термин'],['st-fo','Foreign word'],['st-lt','ñ · th'],['st-tr','Перевод'],['st-pr','/ˈwɜːrd/'],['st-de','Определение'],
+      ['st-ex','Пример'],['st-im','Важное замечание'],['st-wa','Предупреждение'],['st-qu','Вопрос'],['st-su','Краткое резюме'],
+      ['st-co','Вывод'],['st-sc','Источник'],['st-no','Примечание'],['st-nu','42,5%'],['st-qt','Цитируемый фрагмент'],
+      ['st-fa','Факт'],['st-ar','Аргумент'],['st-ct','Контраргумент'],['st-ca','Причина'],['st-rs','Результат'],
+      ['st-da','2026'],['st-pe','Личность'],['st-ev','Событие'],['st-td','Тренд'],['st-ri','Риск']
+    ];
+    const semanticGrid = articleSample.createDiv({ cls: 'esds-semantic-preview-list' });
+    semanticRoles.forEach(([cls,text])=>semanticGrid.createEl('p',{cls,text}));
     const table = articleSample.createEl('table', { cls: 'esds-preview-table' });
     const thead = table.createEl('thead').createEl('tr');
-    thead.createEl('th', { text: 'Понятие' }); thead.createEl('th', { text: 'Значение' });
+    ['Понятие','Значение','Пример'].forEach(text=>thead.createEl('th',{text}));
     const tbody = table.createEl('tbody');
     const row = tbody.createEl('tr');
-    row.createEl('td', { text: 'Пример' }); row.createEl('td', { text: 'Образец данных' });
+    ['Термин','Определение','Контекст'].forEach(text=>row.createEl('td',{text}));
+    const list = articleSample.createEl('ul');
+    ['Первый пункт списка','Второй пункт списка'].forEach(text=>list.createEl('li',{text}));
+    const code = articleSample.createEl('pre');
+    code.createEl('code',{text:'const study = true;'});
+    articleSample.createEl('blockquote', { text: 'Короткая цитата или важная выдержка из источника.' });
+    articleSample.createEl('p').createEl('a',{text:'Пример ссылки',attr:{href:'#esds-preview-link'}});
     articleSample.createEl('hr');
-    this.renderBlockGallery(sample, ['rule', 'example', 'important', 'tip', 'warning', 'question']);
+    this.renderBlockGallery(sample, CALLOUT_KEYS);
   }
   openPaletteMenu(palette, anchorEl) {
     this.openItemMenu(anchorEl, [

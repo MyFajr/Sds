@@ -24,6 +24,11 @@ assert.ok(main.includes("key === 'letter' ? roles.en : null"));
 assert.ok(css.includes('var(--esds-letter'));
 assert.ok(!/^\s*\.st-lt\s*\{/m.test(css));
 assert.ok(!/^\s*(?:table|td|th)\s*\{/m.test(css));
+assert.ok(css.length > 200000, 'full original stylesheet must be preserved');
+const cssWithoutComments = css.replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
+let cssDepth = 0;
+for (const char of cssWithoutComments) { if (char === '{') cssDepth++; if (char === '}') cssDepth--; assert.ok(cssDepth >= 0, 'CSS braces must not close early'); }
+assert.equal(cssDepth, 0, 'CSS braces must be balanced');
 assert.ok(css.includes('tr:not(:nth-child(even)) td:nth-child(1)'), 'column fills must preserve alternating row backgrounds');
 assert.ok(css.includes('tr.is-selected td') && css.includes('!important'), 'selected row must override column fills');
 assert.ok(css.includes('--esds-table-col-20-bg'), 'CSS must support up to 20 indexed columns');
@@ -63,6 +68,17 @@ for (const file of files) {
     assert.match(p.dark[key], /^#[0-9a-f]{6}$/i, file + ' dark.' + key);
     assert.ok(contrastRatio(p.roles[key], '#FBF8F0') >= contrastThresholds[key] - 0.02, file + ' light contrast ' + key);
     assert.ok(contrastRatio(p.dark[key], '#202421') >= 4.5, file + ' dark contrast ' + key);
+  }
+  assert.notEqual(p.roles.letter, p.roles.en, file + ' letter role must be independent from en');
+  assert.notEqual(p.dark.letter, p.dark.en, file + ' dark letter role must be independent from en');
+  for (const key of calloutKeys) {
+    assert.ok(['classic','dashed','dotted','double','left','none','top'].includes(p.calloutFrames[key].preset), file + ' frame preset ' + key);
+    assert.ok(p.calloutFrames[key].width >= 0 && p.calloutFrames[key].width <= 8, file + ' frame width ' + key);
+    assert.ok(p.calloutFrames[key].radius >= 0 && p.calloutFrames[key].radius <= 32, file + ' frame radius ' + key);
+  }
+  for (const mode of ['table','darkTable']) {
+    const indices = p[mode].columns.map(column => column.index);
+    assert.equal(new Set(indices).size, indices.length, file + ' unique ' + mode + ' column indices');
   }
   for (const key of calloutKeys) {
     assert.ok(p.callouts[key], file + ' callouts.' + key);

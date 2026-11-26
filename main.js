@@ -3111,7 +3111,14 @@ class DesignStudioModal extends Modal {
 
 
   async choosePaletteCategory(options = {}) {
-    const categories = (options.categories || this.getCategories('palettes') || []).slice();
+    const supplied = (options.categories || this.getCategories('palettes') || []).slice();
+    const categoryMap = new Map();
+    supplied.forEach(item => { if (item && item.name) categoryMap.set(item.name.toLocaleLowerCase(), item); });
+    this.allPalettes().forEach(item => {
+      const name = String(item.category || 'Мои палитры').trim();
+      if (name && !categoryMap.has(name.toLocaleLowerCase())) categoryMap.set(name.toLocaleLowerCase(), { name });
+    });
+    const categories = [...categoryMap.values()];
     const counts = new Map();
     this.allPalettes().forEach(item => { const name = String(item.category || 'Мои палитры'); counts.set(name, (counts.get(name) || 0) + 1); });
     const suggested = String(options.suggestedName || '').trim();
@@ -3242,7 +3249,7 @@ class DesignStudioModal extends Modal {
       const file = input.files && input.files[0];
       if (!file) { input.remove(); return; }
       try {
-        const fileBase = String(file.name || '').replace(/\\.zip$/i, '').trim() || 'Импортированная коллекция';
+        const fileBase = String(file.name || '').replace(/\.zip$/i, '').trim() || 'Импортированная коллекция';
         const entries = await this.readPaletteZipEntries(await file.arrayBuffer());
         const candidates = [], errors = [];
         let manifestName = '';

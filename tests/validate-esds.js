@@ -37,11 +37,11 @@ const contrastRatio = (a,b) => { const x=luminance(a), y=luminance(b); return (M
 const dir = path.join(root, 'palettes/06-juicy-tropical');
 const files = fs.readdirSync(dir).filter(name => /^\d{2}_.*\.json$/.test(name)).sort();
 assert.equal(files.length, 25, 'expected exactly 25 tropical palette JSON files');
-const backgroundSource = main.match(/const BACKGROUNDS = \\[([\\s\\S]*?)\\n\\];/);
-const blockSource = main.match(/const BUILTIN_BLOCK_STYLES = \\[([\\s\\S]*?)\\n\\];/);
+const backgroundSource = main.match(/const BACKGROUNDS = \[([\s\S]*?)\n\];/);
+const blockSource = main.match(/const BUILTIN_BLOCK_STYLES = \[([\s\S]*?)\n\];/);
 assert.ok(backgroundSource && blockSource, 'built-in background and block registries must exist');
-const backgroundIds = new Set([...backgroundSource[1].matchAll(/id:\\s*'([^']+)'/g)].map(match => match[1]));
-const blockIds = new Set([...blockSource[1].matchAll(/id:\\s*'([^']+)'/g)].map(match => match[1]));
+const backgroundIds = new Set([...backgroundSource[1].matchAll(/id:\s*'([^']+)'/g)].map(match => match[1]));
+const blockIds = new Set([...blockSource[1].matchAll(/id:\s*'([^']+)'/g)].map(match => match[1]));
 const previewClasses = ['st-le','st-mi','st-ac','st-so','st-te','st-fo','st-lt','st-tr','st-pr','st-de','st-ex','st-im','st-wa','st-qu','st-su','st-co','st-sc','st-no','st-nu','st-qt','st-fa','st-ar','st-ct','st-ca','st-rs','st-da','st-pe','st-ev','st-td','st-ri'];
 for (const className of previewClasses) assert.ok(main.includes(`['${className}'`), 'palette preview must include ' + className);
 assert.ok(main.includes('this.renderBlockGallery(sample, CALLOUT_KEYS)'), 'palette preview must include all 12 Callout types');

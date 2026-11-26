@@ -1,9 +1,9 @@
 {
   "id": "english-study-design-studio",
   "name": "English Study Design Studio",
-  "version": "0.9.19",
+  "version": "0.9.21",
   "minAppVersion": "1.5.0",
-  "description": "Universal semantic styling with distinct foreign-letter class, improved scrollable palette preview, and streamlined catalogues.",
+  "description": "Semantic study-note design studio with accessible UI, palette category import/export, ZIP collections and live previews. v0.9.21: improved UX, unified favorites, confirmations, clearer current-selection indicator.",
   "author": "Custom personal plugin",
   "isDesktopOnly": false
 }

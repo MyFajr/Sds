@@ -3897,24 +3897,27 @@ body.theme-dark .esds-preview.bg-28-saffron-cream, .esds-preview.esds-preview-da
   border-collapse:separate;
   border-spacing:0;
   overflow:hidden;
-  border-color:rgba(var(--esds-callout-info),.28);
+  border-color:var(--esds-table-border,rgba(var(--esds-callout-info),.28));
+  background:var(--esds-table-bg,transparent);
+  color:var(--esds-table-text,var(--esds-ink,var(--text-normal)));
 }
 .markdown-preview-view.esds-note table thead th,
 .esds-preview table thead th {
-  background:rgba(var(--esds-callout-info),.13);
-  color:var(--esds-heading,var(--text-normal));
-  border-color:rgba(var(--esds-callout-info),.34);
+  background:var(--esds-table-header-bg,rgba(var(--esds-callout-info),.13));
+  color:var(--esds-table-header-text,var(--esds-heading,var(--text-normal)));
+  border-color:var(--esds-table-border,rgba(var(--esds-callout-info),.34));
 }
 .markdown-preview-view.esds-note table td,
 .markdown-preview-view.esds-note table th,
 .esds-preview table td,
 .esds-preview table th {
   padding:.42em .62em;
-  border-color:rgba(var(--esds-callout-info),.25);
+  border-color:var(--esds-table-border,rgba(var(--esds-callout-info),.25));
+  color:var(--esds-table-text,var(--esds-ink,var(--text-normal)));
 }
 .markdown-preview-view.esds-note table tbody tr:nth-child(even) td,
 .esds-preview table tbody tr:nth-child(even) td {
-  background:rgba(var(--esds-callout-info),.045);
+  background:var(--esds-table-stripe-bg,rgba(var(--esds-callout-info),.045));
 }
 .markdown-preview-view.esds-note blockquote,
 .markdown-source-view.esds-note .cm-quote,
@@ -4078,3 +4081,48 @@ body.theme-dark .esds-preview.bg-28-saffron-cream, .esds-preview.esds-preview-da
   .esds-preview-modal .esds-preview-modal-header { padding-top: 6px; padding-bottom: 6px; }
   .esds-preview-modal .esds-library-preview-actions { padding-top: 5px; padding-bottom: max(5px, env(safe-area-inset-bottom, 0px)); }
 }
+
+
+/* ESDS 0.9.20 — palette-owned table tokens and per-column styling, scoped to ESDS notes/previews. */
+.markdown-preview-view.esds-note table tbody td:nth-child(1),.esds-preview table tbody td:nth-child(1){background:var(--esds-table-col-1-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-1-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-1-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(1),.esds-preview table thead th:nth-child(1){background:var(--esds-table-col-1-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-1-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-1-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(2),.esds-preview table tbody td:nth-child(2){background:var(--esds-table-col-2-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-2-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-2-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(2),.esds-preview table thead th:nth-child(2){background:var(--esds-table-col-2-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-2-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-2-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(3),.esds-preview table tbody td:nth-child(3){background:var(--esds-table-col-3-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-3-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-3-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(3),.esds-preview table thead th:nth-child(3){background:var(--esds-table-col-3-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-3-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-3-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(4),.esds-preview table tbody td:nth-child(4){background:var(--esds-table-col-4-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-4-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-4-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(4),.esds-preview table thead th:nth-child(4){background:var(--esds-table-col-4-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-4-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-4-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(5),.esds-preview table tbody td:nth-child(5){background:var(--esds-table-col-5-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-5-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-5-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(5),.esds-preview table thead th:nth-child(5){background:var(--esds-table-col-5-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-5-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-5-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(6),.esds-preview table tbody td:nth-child(6){background:var(--esds-table-col-6-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-6-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-6-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(6),.esds-preview table thead th:nth-child(6){background:var(--esds-table-col-6-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-6-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-6-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(7),.esds-preview table tbody td:nth-child(7){background:var(--esds-table-col-7-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-7-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-7-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(7),.esds-preview table thead th:nth-child(7){background:var(--esds-table-col-7-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-7-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-7-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(8),.esds-preview table tbody td:nth-child(8){background:var(--esds-table-col-8-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-8-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-8-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(8),.esds-preview table thead th:nth-child(8){background:var(--esds-table-col-8-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-8-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-8-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(9),.esds-preview table tbody td:nth-child(9){background:var(--esds-table-col-9-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-9-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-9-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(9),.esds-preview table thead th:nth-child(9){background:var(--esds-table-col-9-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-9-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-9-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(10),.esds-preview table tbody td:nth-child(10){background:var(--esds-table-col-10-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-10-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-10-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(10),.esds-preview table thead th:nth-child(10){background:var(--esds-table-col-10-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-10-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-10-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(11),.esds-preview table tbody td:nth-child(11){background:var(--esds-table-col-11-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-11-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-11-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(11),.esds-preview table thead th:nth-child(11){background:var(--esds-table-col-11-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-11-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-11-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(12),.esds-preview table tbody td:nth-child(12){background:var(--esds-table-col-12-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-12-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-12-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(12),.esds-preview table thead th:nth-child(12){background:var(--esds-table-col-12-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-12-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-12-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(13),.esds-preview table tbody td:nth-child(13){background:var(--esds-table-col-13-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-13-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-13-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(13),.esds-preview table thead th:nth-child(13){background:var(--esds-table-col-13-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-13-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-13-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(14),.esds-preview table tbody td:nth-child(14){background:var(--esds-table-col-14-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-14-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-14-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(14),.esds-preview table thead th:nth-child(14){background:var(--esds-table-col-14-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-14-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-14-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(15),.esds-preview table tbody td:nth-child(15){background:var(--esds-table-col-15-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-15-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-15-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(15),.esds-preview table thead th:nth-child(15){background:var(--esds-table-col-15-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-15-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-15-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table tbody td:nth-child(16),.esds-preview table tbody td:nth-child(16){background:var(--esds-table-col-16-bg,var(--esds-table-bg,transparent));color:var(--esds-table-col-16-text,var(--esds-table-text,var(--esds-ink,var(--text-normal))));border-color:var(--esds-table-col-16-border,var(--esds-table-border,transparent));}
+.markdown-preview-view.esds-note table thead th:nth-child(16),.esds-preview table thead th:nth-child(16){background:var(--esds-table-col-16-header-bg,var(--esds-table-header-bg,transparent));color:var(--esds-table-col-16-header-text,var(--esds-table-header-text,var(--esds-heading,var(--text-normal))));border-color:var(--esds-table-col-16-border,var(--esds-table-border,transparent));}
+.esds-palette-table-editor{margin:10px 0;padding:10px;border:1px solid var(--background-modifier-border);border-radius:10px;background:var(--background-secondary);}
+.esds-palette-table-editor>summary{cursor:pointer;font-weight:700;color:var(--text-normal);}
+.esds-palette-table-editor>.esds-section-note{margin:7px 0 10px;}
+.esds-table-columns-heading{margin:12px 0 7px;}
+.esds-table-columns-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.esds-table-column-editor{min-width:0;padding:8px;border:1px solid var(--background-modifier-border);border-radius:9px;background:var(--background-primary);}
+.esds-table-column-editor>strong{display:block;margin-bottom:6px;font-size:.78rem;}
+.esds-table-column-editor .esds-color-field{margin:4px 0;}
+.esds-table-column-editor .esds-color-field label{font-size:.68rem;}
+@media(max-width:420px){.esds-table-columns-grid{grid-template-columns:minmax(0,1fr);}}

@@ -1773,24 +1773,27 @@ class DesignStudioModal extends Modal {
   section(root, id, title, subtitle, icon) {
     const isOpen = this.activeSection === id;
     const wrap = root.createDiv({ cls: `esds-accordion esds-section-${id}${isOpen ? ' is-open' : ''}` });
+    const triggerId = `esds-section-trigger-${id}`;
+    const bodyId = `esds-section-body-${id}`;
     const header = wrap.createEl('button', {
       cls: 'esds-accordion-trigger',
-      attr: { type: 'button', 'aria-expanded': isOpen ? 'true' : 'false' }
+      attr: { type: 'button', id: triggerId, 'aria-expanded': isOpen ? 'true' : 'false', 'aria-controls': bodyId }
     });
-    header.createSpan({ cls: 'esds-accordion-icon', text: isOpen ? '▾' : (icon || '›') });
+    header.createSpan({ cls: 'esds-accordion-icon', text: icon || '›' });
     const labels = header.createDiv({ cls: 'esds-accordion-labels' });
     labels.createEl('strong', { text: title });
     if (subtitle) labels.createEl('small', { text: subtitle });
     header.createSpan({
       cls: 'esds-chevron esds-accordion-chevron',
-      text: isOpen ? '⌄' : '›',
+      text: '›',
       attr: { 'aria-hidden': 'true' }
     });
     header.addEventListener('click', () => {
       this.activeSection = this.activeSection === id ? '' : id;
+      this._focusSectionId = id;
       this.render();
     });
-    const body = wrap.createDiv({ cls: 'esds-accordion-body' });
+    const body = wrap.createDiv({ cls: 'esds-accordion-body', attr: { id: bodyId, role: 'region', 'aria-labelledby': triggerId } });
     if (!isOpen) body.style.display = 'none';
     return { wrap, body: isOpen ? body : null };
   }
@@ -1806,6 +1809,7 @@ class DesignStudioModal extends Modal {
       const subScroll = root.querySelector('.esds-main-scroll');
       if (subScroll) subScroll.scrollTop = previousScrollTop;
       this._lastRenderedView = this.activeView;
+      this.restoreRenderFocus();
       return;
     }
 
@@ -1911,6 +1915,25 @@ class DesignStudioModal extends Modal {
 
     scroll.scrollTop = previousScrollTop;
     this._lastRenderedView = this.activeView;
+    this.restoreRenderFocus();
+  }
+  restoreRenderFocus() {
+    // Full re-render moves focus to <body>; give it back to the control the
+    // user just interacted with so keyboard navigation stays continuous.
+    let target = null;
+    if (this._focusSectionId) {
+      target = this.contentEl.querySelector(`.esds-section-${this._focusSectionId} .esds-accordion-trigger`);
+      this._focusSectionId = null;
+    } else if (this._focusLibraryTab) {
+      target = this.contentEl.querySelector('.esds-library-catalog-tab.is-active');
+      this._focusLibraryTab = false;
+    } else if (this._focusAdvancedToggle) {
+      target = this.contentEl.querySelector('.esds-advanced-toggle');
+      this._focusAdvancedToggle = false;
+    }
+    if (target && typeof target.focus === 'function') {
+      try { target.focus(); } catch (focusError) { /* element may be gone */ }
+    }
   }
   renderReferenceSection(parent) {
     parent.createEl('p', { cls: 'esds-section-note', text: 'Короткие коды используются в заметках. Полное назначение каждого кода хранится в справочнике ESDS. Все классы универсальны и не привязаны к конкретному языку или предмету.' });
@@ -2032,15 +2055,16 @@ class DesignStudioModal extends Modal {
     resolvedGroups.filter(group => group.items.length).forEach(group => {
       const section = parent.createDiv({ cls: `esds-favorite-group esds-favorite-group-${group.kind}` });
       const expanded = this.favoriteGroupsOpen[group.kind] === true;
+      const listId = `esds-favorite-group-list-${group.kind}`;
       const heading = section.createEl('button', {
         cls: 'esds-favorite-group-heading',
-        attr: { type: 'button', 'aria-expanded': expanded ? 'true' : 'false' }
+        attr: { type: 'button', 'aria-expanded': expanded ? 'true' : 'false', 'aria-controls': listId }
       });
       heading.createSpan({ cls: 'esds-favorite-group-icon', text: group.icon });
       heading.createEl('strong', { text: group.title });
       const groupCount = heading.createSpan({ cls: 'esds-favorite-group-count', text: String(group.items.length) });
-      const chevron = heading.createSpan({ cls: 'esds-favorite-group-chevron', text: expanded ? '⌄' : '›', attr: { 'aria-hidden': 'true' } });
-      const list = section.createDiv({ cls: 'esds-user-background-list esds-favorite-items-list' });
+      const chevron = heading.createSpan({ cls: 'esds-favorite-group-chevron', text: '›', attr: { 'aria-hidden': 'true' } });
+      const list = section.createDiv({ cls: 'esds-user-background-list esds-favorite-items-list', attr: { id: listId } });
       list.hidden = !expanded;
       if (expanded) heading.addClass('is-open');
       heading.addEventListener('click', () => {
@@ -2049,7 +2073,7 @@ class DesignStudioModal extends Modal {
         list.hidden = !next;
         heading.setAttribute('aria-expanded', next ? 'true' : 'false');
         heading.toggleClass('is-open', next);
-        chevron.setText(next ? '⌄' : '›');
+        chevron.setText('›');
       });
 
       group.items.forEach(({ entry, item }) => {
@@ -2202,7 +2226,7 @@ class DesignStudioModal extends Modal {
     kinds.forEach(([kind, label]) => {
       const count = this.libraryItems(kind).length;
       const button = tabs.createEl('button', { cls: `esds-library-catalog-tab${this.libraryKind === kind ? ' is-active' : ''}`, text: `${label} · ${count}`, attr: { type: 'button', 'aria-pressed': this.libraryKind === kind ? 'true' : 'false' } });
-      button.addEventListener('click', () => { this.libraryKind = kind; this.libraryCategory = null; this.librarySearchText = ''; this.render(); });
+      button.addEventListener('click', () => { this.libraryKind = kind; this.libraryCategory = null; this.librarySearchText = ''; this._focusLibraryTab = true; this.render(); });
     });
     const kind = this.libraryKind;
     const allItems = this.libraryItems(kind);
@@ -2351,7 +2375,7 @@ class DesignStudioModal extends Modal {
 
     const advanced = parent.createDiv({ cls: 'esds-subsection esds-advanced-tools' });
     const toggle = advanced.createEl('button', { cls: 'esds-advanced-toggle', text: `${this.advancedOpen ? '⌄' : '›'} Дополнительно`, attr: { type: 'button', 'aria-expanded': this.advancedOpen ? 'true' : 'false' } });
-    toggle.addEventListener('click', () => { this.advancedOpen = !this.advancedOpen; this.render(); });
+    toggle.addEventListener('click', () => { this.advancedOpen = !this.advancedOpen; this._focusAdvancedToggle = true; this.render(); });
     if (this.advancedOpen) {
       const details = advanced.createDiv({ cls: 'esds-advanced-content' });
       details.createEl('p', { cls: 'esds-path-note', text: 'Пользовательская библиотека автоматически хранится в data.json этого плагина — в его стандартной папке Obsidian. Архив обновления не содержит data.json и не заменяет личную коллекцию.' });

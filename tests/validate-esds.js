@@ -24,6 +24,9 @@ assert.ok(main.includes("key === 'letter' ? roles.en : null"));
 assert.ok(css.includes('var(--esds-letter'));
 assert.ok(!/^\s*\.st-lt\s*\{/m.test(css));
 assert.ok(!/^\s*(?:table|td|th)\s*\{/m.test(css));
+assert.ok(css.includes('tr:not(:nth-child(even)) td:nth-child(1)'), 'column fills must preserve alternating row backgrounds');
+assert.ok(css.includes('tr.is-selected td') && css.includes('!important'), 'selected row must override column fills');
+assert.ok(css.includes('--esds-table-col-20-bg'), 'CSS must support up to 20 indexed columns');
 
 const roleKeys = ['en','letter','ipa','translation','term','definition','focus','secondary','soft','heading','ink'];
 const calloutKeys = ['rule','example','important','tip','warning','question','practice','success','info','note','quote','abstract'];

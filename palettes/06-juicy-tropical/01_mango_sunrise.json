@@ -602,89 +602,89 @@
     },
     "table": {
       "header": {
-        "background": "#ECE1DA",
-        "text": "#382A20",
+        "background": "#F5E7D1",
+        "text": "#513A26",
         "accent": "#C66A08",
-        "border": "#D0B4A3"
+        "border": "#E7D8C2"
       },
       "body": {
         "background": "#FFFFFF",
         "text": "#382A20",
-        "alternateBackground": "#FCF5F4",
-        "selectedBackground": "#F7EADC",
-        "border": "#E3D2C9"
+        "alternateBackground": "#FFF8EF",
+        "selectedBackground": "#FCE9C9",
+        "border": "#E7D8C2"
       },
       "columns": [
         {
           "index": 1,
-          "background": "#FEFBF9",
+          "background": "#FFFFFF",
           "text": "#382A20",
-          "headerBackground": "#F6E9DA",
-          "headerText": "#382A20",
+          "headerBackground": "#F5E7D1",
+          "headerText": "#513A26",
           "accent": "#C66A08",
-          "border": "#EDCFB0"
+          "border": "#E7D8C2"
         },
         {
           "index": 2,
-          "background": "#F9FCFB",
+          "background": "#FFFDF9",
           "text": "#382A20",
-          "headerBackground": "#DEEBEA",
-          "headerText": "#382A20",
-          "accent": "#207A70",
-          "border": "#B8D4D1"
+          "headerBackground": "#F7EBDD",
+          "headerText": "#513A26",
+          "accent": "#C75037",
+          "border": "#E7D8C2"
         },
         {
           "index": 3,
-          "background": "#FEFBFA",
+          "background": "#FFFAF2",
           "text": "#382A20",
-          "headerBackground": "#F7E5E1",
-          "headerText": "#382A20",
-          "accent": "#C75037",
-          "border": "#EDC7BF"
+          "headerBackground": "#F5E7D1",
+          "headerText": "#513A26",
+          "accent": "#207A70",
+          "border": "#E7D8C2"
         }
       ]
     },
     "darkTable": {
       "header": {
-        "background": "#5B503F",
+        "background": "#343027",
         "text": "#F4EBDD",
         "accent": "#FFC56B",
-        "border": "#9E8361"
+        "border": "#41463D"
       },
       "body": {
         "background": "#202421",
         "text": "#F4EBDD",
-        "alternateBackground": "#3B312B",
-        "selectedBackground": "#514731",
+        "alternateBackground": "#252A25",
+        "selectedBackground": "#3D3322",
         "border": "#41463D"
       },
       "columns": [
         {
           "index": 1,
-          "background": "#2A2B24",
+          "background": "#202421",
           "text": "#F4EBDD",
-          "headerBackground": "#564B33",
+          "headerBackground": "#343027",
           "headerText": "#F4EBDD",
           "accent": "#FFC56B",
-          "border": "#846C42"
+          "border": "#41463D"
         },
         {
           "index": 2,
-          "background": "#242C28",
+          "background": "#232824",
           "text": "#F4EBDD",
-          "headerBackground": "#354F47",
+          "headerBackground": "#3A342A",
           "headerText": "#F4EBDD",
-          "accent": "#77D9C0",
-          "border": "#477569"
+          "accent": "#FF9277",
+          "border": "#41463D"
         },
         {
           "index": 3,
-          "background": "#2A2925",
+          "background": "#252A25",
           "text": "#F4EBDD",
-          "headerBackground": "#563E36",
+          "headerBackground": "#343027",
           "headerText": "#F4EBDD",
-          "accent": "#FF9277",
-          "border": "#845648"
+          "accent": "#77D9C0",
+          "border": "#41463D"
         }
       ]
     }

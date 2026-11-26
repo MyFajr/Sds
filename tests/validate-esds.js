@@ -28,7 +28,7 @@ assert.ok(!/^\\s*(?:table|td|th)\\s*\\{/m.test(css));
 const roleKeys = ['en','letter','ipa','translation','term','definition','focus','secondary','soft','heading','ink'];
 const calloutKeys = ['rule','example','important','tip','warning','question','practice','success','info','note','quote','abstract'];
 const dir = path.join(root, 'palettes/06-juicy-tropical');
-const files = fs.readdirSync(dir).filter(name => /^\\d{2}_.*\\.json$/.test(name)).sort();
+const files = fs.readdirSync(dir).filter(name => /^\d{2}_.*\.json$/.test(name)).sort();
 assert.equal(files.length, 25, 'expected exactly 25 tropical palette JSON files');
 const names = [];
 for (const file of files) {

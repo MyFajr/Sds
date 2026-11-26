@@ -759,33 +759,55 @@ function clone(value) {
 function normalizePaletteTable(source) {
   if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
   const result = {};
-  TABLE_COLOR_KEYS.forEach(key => { if (isValidPaletteColor(source[key])) result[key] = colorToHex(source[key]); });
+  const normalizeSection = (input, keys) => {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+    const output = {};
+    keys.forEach(key => { if (isValidPaletteColor(input[key])) output[key] = colorToHex(input[key]); });
+    return Object.keys(output).length ? output : null;
+  };
+  result.header = normalizeSection(source.header, ['background', 'text', 'accent', 'border']);
+  result.body = normalizeSection(source.body, ['background', 'text', 'alternateBackground', 'selectedBackground', 'border']);
   if (Array.isArray(source.columns)) {
-    const columns = source.columns.slice(0, 16).map(column => {
-      if (!column || typeof column !== 'object' || Array.isArray(column)) return {};
-      return Object.fromEntries(TABLE_COLUMN_COLOR_KEYS.filter(key => isValidPaletteColor(column[key])).map(key => [key, colorToHex(column[key])]));
-    });
-    if (columns.some(column => Object.keys(column).length)) result.columns = columns;
+    const seen = new Set();
+    const columns = source.columns.slice(0, 20).map((column, position) => {
+      if (!column || typeof column !== 'object' || Array.isArray(column)) return null;
+      const index = Number.isInteger(Number(column.index)) ? Number(column.index) : position + 1;
+      if (index < 1 || index > 20 || seen.has(index)) return null;
+      seen.add(index);
+      const normalized = { index };
+      TABLE_COLUMN_COLOR_KEYS.concat(['accent']).forEach(key => { if (isValidPaletteColor(column[key])) normalized[key] = colorToHex(column[key]); });
+      return Object.keys(normalized).length > 1 ? normalized : null;
+    }).filter(Boolean);
+    if (columns.length) result.columns = columns;
   }
-  return Object.keys(result).length ? result : null;
+  if (source.header && source.body && (result.header || result.body)) return result;
+  // Accept the short-lived flat v4 preview draft as a compatibility bridge.
+  if (TABLE_COLOR_KEYS.some(key => isValidPaletteColor(source[key]))) {
+    result.header = result.header || {};
+    result.body = result.body || {};
+    if (isValidPaletteColor(source.headerBackground)) result.header.background = colorToHex(source.headerBackground);
+    if (isValidPaletteColor(source.headerText)) result.header.text = colorToHex(source.headerText);
+    if (isValidPaletteColor(source.border)) { result.header.border = colorToHex(source.border); result.body.border = colorToHex(source.border); }
+    if (isValidPaletteColor(source.background)) result.body.background = colorToHex(source.background);
+    if (isValidPaletteColor(source.text)) result.body.text = colorToHex(source.text);
+    if (isValidPaletteColor(source.stripeBackground)) result.body.alternateBackground = colorToHex(source.stripeBackground);
+    return result;
+  }
+  return result.header || result.body || result.columns ? result : null;
 }
 function paletteTableCss(selectors, table) {
-  if (!table || typeof table !== 'object') return '';
-  const names = { background:'bg', text:'text', headerBackground:'header-bg', headerText:'header-text', border:'border', stripeBackground:'stripe-bg' };
-  const vars = TABLE_COLOR_KEYS.filter(key => isValidPaletteColor(table[key])).map(key => `--esds-table-${names[key]}:${colorToHex(table[key])};`);
-  const columns = (Array.isArray(table.columns) ? table.columns : []).slice(0,16).map((column,index) => {
-    if (!column || typeof column !== 'object') return '';
-    const n=index+1, body=[], header=[];
-    if (isValidPaletteColor(column.background)) body.push(`background-color:${colorToHex(column.background)};`);
-    if (isValidPaletteColor(column.text)) body.push(`color:${colorToHex(column.text)};`);
-    if (isValidPaletteColor(column.border)) body.push(`border-color:${colorToHex(column.border)};`);
-    if (isValidPaletteColor(column.headerBackground)) header.push(`background-color:${colorToHex(column.headerBackground)};`);
-    if (isValidPaletteColor(column.headerText)) header.push(`color:${colorToHex(column.headerText)};`);
-    if (isValidPaletteColor(column.border)) header.push(`border-color:${colorToHex(column.border)};`);
-    return (body.length ? `${selectors} table tbody td:nth-child(${n}){${body.join('')}}` : '') +
-      (header.length ? `${selectors} table thead th:nth-child(${n}){${header.join('')}}` : '');
-  }).join('');
-  return (vars.length ? `${selectors}{${vars.join('')}}` : '') + columns;
+  if (!table) return '';
+  const vars = [];
+  const headerNames = { background:'header-bg', text:'header-text', accent:'header-accent', border:'header-border' };
+  const bodyNames = { background:'body-bg', text:'body-text', alternateBackground:'alternate-bg', selectedBackground:'selected-bg', border:'body-border' };
+  Object.entries(headerNames).forEach(([key, name]) => { if (table.header && table.header[key]) vars.push(`--esds-table-${name}:${table.header[key]};`); });
+  Object.entries(bodyNames).forEach(([key, name]) => { if (table.body && table.body[key]) vars.push(`--esds-table-${name}:${table.body[key]};`); });
+  (table.columns || []).forEach(column => {
+    const n = column.index;
+    const names = { background:'bg', text:'text', headerBackground:'header-bg', headerText:'header-text', accent:'accent', border:'border' };
+    Object.entries(names).forEach(([key, name]) => { if (column[key]) vars.push(`--esds-table-col-${n}-${name}:${column[key]};`); });
+  });
+  return vars.length ? `${selectors}{${vars.join('')}}` : '';
 }
 function makePaletteCss(palette) {
   const cls = `esds-palette-${palette.id}`;
@@ -800,9 +822,9 @@ function makePaletteCss(palette) {
     `.markdown-source-view.esds-note.${cls}`,
     `.esds-preview.${cls}`
   ].join(',');
-  const roleVars = ROLE_KEYS.map(key => { const value = isHexColor(roles[key]) ? roles[key] : (key === 'letter' && isHexColor(roles.ipa) ? roles.ipa : '#777777'); return `--esds-${key}: ${value};`; }).join(' ');
+  const roleVars = ROLE_KEYS.map(key => { const value = isHexColor(roles[key]) ? roles[key] : (key === 'letter' && isHexColor(roles.en) ? roles.en : '#777777'); return `--esds-${key}: ${value};`; }).join(' ');
   const calloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(callouts[key])};`).join(' ');
-  const darkRoleVars = ROLE_KEYS.map(key => { const fallback = key === 'letter' ? (darkRoles.ipa || roles.letter || roles.ipa) : roles[key]; const value = isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(fallback) ? fallback : '#dddddd'); return `--esds-${key}: ${value};`; }).join(' ');
+  const darkRoleVars = ROLE_KEYS.map(key => { const fallback = key === 'letter' ? (darkRoles.en || roles.letter || roles.en) : roles[key]; const value = isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(fallback) ? fallback : '#dddddd'); return `--esds-${key}: ${value};`; }).join(' ');
   const darkCalloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(darkCallouts[key])};`).join(' ');
   const mapVars = (fill, text, border) => CALLOUT_KEYS.map(key => {
     const vars = [];
@@ -1351,7 +1373,7 @@ class PaletteBuilderModal extends Modal {
     ROLE_KEYS.forEach(key => {
       const field = swatches.createDiv({ cls: 'esds-color-field' });
       field.createEl('label', { text: labels[key] });
-      const roleFallback = key === 'letter' ? (currentRoles.ipa || this.base.roles.ipa) : this.base.roles[key];
+      const roleFallback = key === 'letter' ? (currentRoles.en || this.base.roles.en) : this.base.roles[key];
       const value = isHexColor(currentRoles[key]) ? currentRoles[key] : (roleFallback || '#777777');
       const input = field.createEl('input', { attr: { type: 'color', value } });
       input.value = value; this.inputs[this.themeMode][key] = input;
@@ -1367,33 +1389,44 @@ class PaletteBuilderModal extends Modal {
     tableDetails.createEl('p', { cls: 'esds-section-note', text: 'Общие цвета задают основу. Цвета отдельных колонок можно настроить независимо; пустые параметры наследуют общие значения.' });
     const tableModeKey = this.themeMode === 'dark' ? 'darkTable' : 'table';
     const tableConfig = clone(this.base[tableModeKey] || (this.themeMode === 'dark' ? this.base.table : {}) || {});
-    const tableGrid = tableDetails.createDiv({ cls: 'esds-color-grid esds-table-base-grid' });
-    const tableLabels = { background:'Фон ячеек', text:'Текст ячеек', headerBackground:'Фон заголовка', headerText:'Текст заголовка', border:'Границы', stripeBackground:'Чётные строки' };
-    const tableFallbacks = { background:'#ffffff', text:currentRoles.ink || '#302d38', headerBackground:currentRoles.heading || '#51428d', headerText:'#ffffff', border:currentRoles.heading || '#51428d', stripeBackground:'#f3f4f8' };
+    tableConfig.header = tableConfig.header || {};
+    tableConfig.body = tableConfig.body || {};
     const saveTableConfig = () => { this.base[tableModeKey] = clone(tableConfig); refreshLinkedPreview(); };
-    TABLE_COLOR_KEYS.forEach(key => {
-      const field=tableGrid.createDiv({cls:'esds-color-field'});
-      field.createEl('label',{text:tableLabels[key]});
-      const value=isHexColor(tableConfig[key])?tableConfig[key]:tableFallbacks[key];
-      const input=field.createEl('input',{attr:{type:'color',value}});
-      input.addEventListener('input',()=>{tableConfig[key]=input.value;saveTableConfig();});
+    const tableSections = [
+      { key:'header', title:'Заголовок таблицы', fields:{background:'Фон заголовка',text:'Текст заголовка',accent:'Акцент заголовка',border:'Граница заголовка'}, fallbacks:{background:currentRoles.heading || '#51428d',text:'#ffffff',accent:currentRoles.focus || '#c66a08',border:currentRoles.heading || '#51428d'} },
+      { key:'body', title:'Ячейки таблицы', fields:{background:'Фон ячеек',text:'Текст ячеек',alternateBackground:'Чередующаяся строка',selectedBackground:'Выделенная строка',border:'Границы'}, fallbacks:{background:'#ffffff',text:currentRoles.ink || '#302d38',alternateBackground:'#f3f4f8',selectedBackground:'#fce9c9',border:'#d9d9d9'} }
+    ];
+    tableSections.forEach(section=>{
+      const heading=tableDetails.createEl('h4',{text:section.title});
+      heading.addClass('esds-table-columns-heading');
+      const grid=tableDetails.createDiv({cls:'esds-color-grid esds-table-base-grid'});
+      Object.entries(section.fields).forEach(([key,label])=>{
+        const field=grid.createDiv({cls:'esds-color-field'});
+        field.createEl('label',{text:label});
+        const value=isHexColor(tableConfig[section.key][key])?tableConfig[section.key][key]:section.fallbacks[key];
+        const input=field.createEl('input',{attr:{type:'color',value}});
+        input.addEventListener('input',()=>{tableConfig[section.key][key]=input.value;saveTableConfig();});
+      });
     });
     const columnsHeading=tableDetails.createEl('h4',{text:'Цвета отдельных колонок'});
     columnsHeading.addClass('esds-table-columns-heading');
     const columnsGrid=tableDetails.createDiv({cls:'esds-table-columns-grid'});
-    const columnLabels={background:'Фон',text:'Текст',headerBackground:'Фон заголовка',headerText:'Текст заголовка',border:'Граница'};
-    for(let index=0;index<4;index++){
+    const columnLabels={background:'Фон ячеек',text:'Текст ячеек',headerBackground:'Фон заголовка',headerText:'Текст заголовка',accent:'Акцент заголовка',border:'Граница'};
+    const columnFallbacks={background:'#ffffff',text:currentRoles.ink || '#302d38',headerBackground:currentRoles.heading || '#51428d',headerText:'#ffffff',accent:currentRoles.focus || '#c66a08',border:'#d9d9d9'};
+    for(let index=1;index<=4;index++){
       const column=columnsGrid.createDiv({cls:'esds-table-column-editor'});
-      column.createEl('strong',{text:`Колонка ${index+1}`});
-      const existingColumn=tableConfig.columns&&tableConfig.columns[index]?tableConfig.columns[index]:{};
-      TABLE_COLUMN_COLOR_KEYS.forEach(key=>{
+      column.createEl('strong',{text:`Колонка ${index}`});
+      const existingColumn=(tableConfig.columns||[]).find(item=>item.index===index)||{};
+      TABLE_COLUMN_COLOR_KEYS.concat(['accent']).forEach(key=>{
         const field=column.createDiv({cls:'esds-color-field'});
         field.createEl('label',{text:columnLabels[key]});
-        const value=isHexColor(existingColumn[key])?existingColumn[key]:tableFallbacks[key];
+        const value=isHexColor(existingColumn[key])?existingColumn[key]:columnFallbacks[key];
         const input=field.createEl('input',{attr:{type:'color',value}});
         input.addEventListener('input',()=>{
           if(!Array.isArray(tableConfig.columns))tableConfig.columns=[];
-          tableConfig.columns[index]={...(tableConfig.columns[index]||{}),[key]:input.value};
+          const at=tableConfig.columns.findIndex(item=>item.index===index);
+          const next={...(at>=0?tableConfig.columns[at]:{}),index,[key]:input.value};
+          if(at>=0)tableConfig.columns[at]=next;else tableConfig.columns.push(next);
           saveTableConfig();
         });
       });
@@ -1531,8 +1564,8 @@ class PaletteBuilderModal extends Modal {
       palette.defaultBlocks = palette.defaultBlocks || this.studio.selectedBlocks.id;
       palette.roles = { ...(palette.roles || {}) };
       palette.dark = { ...(palette.dark || palette.roles) };
-      if (!isHexColor(palette.roles.letter)) palette.roles.letter = palette.roles.ipa || '#7450a8';
-      if (!isHexColor(palette.dark.letter)) palette.dark.letter = palette.dark.ipa || palette.roles.letter;
+      if (!isHexColor(palette.roles.letter)) palette.roles.letter = palette.roles.en || '#2868d8';
+      if (!isHexColor(palette.dark.letter)) palette.dark.letter = palette.dark.en || palette.roles.letter;
       ROLE_KEYS.forEach(key => {
         if (this.inputs.light[key]) palette.roles[key] = this.inputs.light[key].value;
         if (this.inputs.dark[key]) palette.dark[key] = this.inputs.dark[key].value;
@@ -2982,11 +3015,13 @@ class DesignStudioModal extends Modal {
     }
     const tableTheme = normalizePaletteTable(darkMode ? (palette.darkTable || palette.table) : palette.table);
     if (tableTheme) {
-      const names={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',border:'border',stripeBackground:'stripe-bg'};
-      TABLE_COLOR_KEYS.forEach(key=>{if(tableTheme[key])container.style.setProperty(`--esds-table-${names[key]}`,tableTheme[key]);});
-      (tableTheme.columns||[]).forEach((column,index)=>{
-        const n=index+1, columnNames={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',border:'border'};
-        TABLE_COLUMN_COLOR_KEYS.forEach(key=>{if(column[key])container.style.setProperty(`--esds-table-col-${n}-${columnNames[key]}`,column[key]);});
+      const headerNames={background:'header-bg',text:'header-text',accent:'header-accent',border:'header-border'};
+      const bodyNames={background:'body-bg',text:'body-text',alternateBackground:'alternate-bg',selectedBackground:'selected-bg',border:'body-border'};
+      Object.entries(headerNames).forEach(([key,name])=>{if(tableTheme.header?.[key])container.style.setProperty(`--esds-table-${name}`,tableTheme.header[key]);});
+      Object.entries(bodyNames).forEach(([key,name])=>{if(tableTheme.body?.[key])container.style.setProperty(`--esds-table-${name}`,tableTheme.body[key]);});
+      (tableTheme.columns||[]).forEach(column=>{
+        const names={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',accent:'accent',border:'border'};
+        Object.entries(names).forEach(([key,name])=>{if(column[key])container.style.setProperty(`--esds-table-col-${column.index}-${name}`,column[key]);});
       });
     }
     const callouts = darkMode && palette.darkCallouts ? palette.darkCallouts : palette.callouts;
@@ -3416,7 +3451,7 @@ class DesignStudioModal extends Modal {
       const palette = clone(p); palette.roles = { ...roles, letter: isHexColor(roles.letter) ? roles.letter : roles.ipa }; palette.id = `user-${slugify(p.name)}-${Date.now().toString(36).slice(-4)}`; palette.createdAt = new Date().toISOString(); palette.updatedAt = palette.createdAt; palette.source = 'user';
       palette.defaultBackground = this.findBackground(p.defaultBackground)?.id || this.selectedBackground.id;
       palette.defaultBlocks = this.findBlockStyle(p.defaultBlocks) ? p.defaultBlocks : this.selectedBlocks.id;
-      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : (key === 'letter' ? (palette.dark?.ipa || palette.roles.letter) : palette.roles[key])]));
+      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : (key === 'letter' ? (palette.dark?.en || palette.roles.letter || palette.roles.en) : palette.roles[key])]));
       palette.table = normalizePaletteTable(palette.table) || undefined;
       palette.darkTable = normalizePaletteTable(palette.darkTable) || palette.table || undefined;
       palette.callouts = palette.callouts || clone(PALETTES[0].callouts);

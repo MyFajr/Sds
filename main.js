@@ -3453,7 +3453,6 @@ class DesignStudioModal extends Modal {
               checkbox.checked = selected.has(item.id);
               const label = row.createSpan({ cls: 'esds-zip-export-label', text: item.name || item.id });
               checkbox.addEventListener('change', () => { if (checkbox.checked) selected.add(item.id); else selected.delete(item.id); updateCount(); });
-              row.addEventListener('click', event => { if (event.target !== checkbox) { checkbox.checked = !checkbox.checked; checkbox.dispatchEvent(new Event('change')); } });
             });
           });
           const actions = root.createDiv({ cls: 'esds-zip-export-actions' });

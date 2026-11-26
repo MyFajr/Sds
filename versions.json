@@ -75,5 +75,9 @@
     "minAppVersion": "1.5.0",
     "description": "Adds st-lt for foreign letters/short letter groups, distinct styling, and palette-independent table column design guidance."
   },
-  "0.9.19": "1.5.0"
+  "0.9.19": "1.5.0",
+  "0.9.20": {
+    "minAppVersion": "1.5.0",
+    "description": "Independent st-lt palette token, per-column table design tokens, backward-compatible palette schema v4, and scrollable Android-friendly previews."
+  }
 }

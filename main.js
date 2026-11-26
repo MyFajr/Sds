@@ -2416,7 +2416,7 @@ class DesignStudioModal extends Modal {
     createPalette.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const createBackground = actions.createEl('button', { cls: 'esds-button esds-btn-lime', text: '+ Создать фон', attr: { type: 'button' } });
     createBackground.addEventListener('click', () => new BackgroundBuilderModal(this.app, this).open());
-    const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитры', attr: { type: 'button' } });
+    const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитр (можно несколько)', attr: { type: 'button' } });
     importPalette.addEventListener('click', () => this.pickJson('palette'));
     const importBackground = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт фона', attr: { type: 'button' } });
     importBackground.addEventListener('click', () => this.pickJson('background'));
@@ -2462,7 +2462,7 @@ class DesignStudioModal extends Modal {
     createBtn.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const zipImportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ ZIP-коллекция', attr: { type: 'button' } });
     zipImportBtn.addEventListener('click', () => this.pickPaletteZip(this.paletteCategory || null));
-    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP категории', attr: { type: 'button' } });
+    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP экспорт', attr: { type: 'button' } });
     zipExportBtn.addEventListener('click', () => this.exportPaletteCategoryZip(this.paletteCategory || null));
     const catBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Категории…', attr: { type: 'button' } });
     catBtn.addEventListener('click', () => this.openCategoryManager('palettes'));
@@ -3448,11 +3448,11 @@ class DesignStudioModal extends Modal {
             const section = list.createDiv({ cls: 'esds-zip-export-group' });
             section.createEl('strong', { text: category });
             items.forEach(item => {
-              const row = section.createEl('label', { cls: 'esds-zip-export-row' });
+              const row = section.createEl('label', { cls: 'esds-zip-export-row' + (selected.has(item.id) ? ' is-selected' : '') });
               const checkbox = row.createEl('input', { attr: { type: 'checkbox' } });
               checkbox.checked = selected.has(item.id);
               const label = row.createSpan({ cls: 'esds-zip-export-label', text: item.name || item.id });
-              checkbox.addEventListener('change', () => { if (checkbox.checked) selected.add(item.id); else selected.delete(item.id); updateCount(); });
+              checkbox.addEventListener('change', () => { if (checkbox.checked) selected.add(item.id); else selected.delete(item.id); row.classList.toggle('is-selected', checkbox.checked); updateCount(); });
             });
           });
           const actions = root.createDiv({ cls: 'esds-zip-export-actions' });

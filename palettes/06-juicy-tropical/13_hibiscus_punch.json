@@ -25,7 +25,7 @@
       "definition": "#70515B",
       "focus": "#D63D62",
       "secondary": "#A34C84",
-      "soft": "#AA7894",
+      "soft": "#8E647C",
       "heading": "#8E294B",
       "ink": "#39272F"
     },
@@ -99,9 +99,9 @@
         167
       ],
       "abstract": [
-        170,
-        120,
-        148
+        142,
+        100,
+        124
       ]
     },
     "darkCallouts": {
@@ -223,9 +223,9 @@
         244
       ],
       "abstract": [
-        245,
-        239,
-        242
+        241,
+        236,
+        239
       ]
     },
     "calloutTexts": {
@@ -347,9 +347,9 @@
         167
       ],
       "abstract": [
-        170,
-        120,
-        148
+        142,
+        100,
+        124
       ]
     },
     "darkCalloutFills": {

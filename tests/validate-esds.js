@@ -12,12 +12,19 @@ const versions = JSON.parse(read('versions.json'));
 const paletteTemplate = JSON.parse(read('palette-template.json'));
 const themePack = JSON.parse(read('theme-pack-template.json'));
 
-assert.equal(manifest.version, '0.9.20');
-assert.ok(versions['0.9.20']);
+assert.equal(manifest.version, '0.9.21');
+assert.ok(versions['0.9.21']);
 assert.equal(paletteTemplate.schemaVersion, 4);
 assert.equal(themePack.items.palette.roles.letter.length, 7);
 assert.equal(themePack.items.palette.dark.letter.length, 7);
 assert.ok(main.includes('paletteSchemaVersion > 4'));
+assert.ok(main.includes('async readPaletteZipEntries(buffer)'), 'ZIP importer must parse archive entries');
+assert.ok(main.includes('async pickPaletteZip(defaultCategory = null)'), 'ZIP importer must support category destination');
+assert.ok(main.includes('async exportPaletteCategoryZip(categoryName = null)'), 'category ZIP export must exist');
+assert.ok(main.includes('skip'), 'duplicate-safe import behavior must be documented in code');
+assert.ok(main.includes('collection-manifest.json'), 'category ZIP export must include a collection manifest');
+assert.ok(main.includes("text: '⇧ ZIP-коллекция'"), 'palette toolbar must expose ZIP import');
+assert.ok(main.includes("text: '⇩ ZIP категории'"), 'palette toolbar must expose category ZIP export');
 assert.ok(main.includes('payload = { schemaVersion: 4, type: \'esds-palette\', palette: item }'));
 assert.ok(main.includes('LEGACY_ROLE_KEYS.every'));
 assert.ok(main.includes("key === 'letter' ? roles.en : null"));
@@ -136,4 +143,4 @@ const generated = helpers.paletteTableCss('.markdown-preview-view.esds-note.esds
 assert.ok(generated.includes('--esds-table-header-bg:#ffffff;'));
 assert.ok(generated.includes('--esds-table-col-2-accent:#cc6600;'));
 assert.ok(!generated.includes('url('));
-console.log('ESDS 0.9.20 validation passed: 25 palettes, light/dark roles, 12 callouts, indexed tables, CSS scoping.');
+console.log('ESDS 0.9.21 validation passed: ZIP collection controls, 25 palettes, light/dark roles, 12 callouts, indexed tables, CSS scoping.');

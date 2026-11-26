@@ -27,6 +27,13 @@ assert.ok(!/^\s*(?:table|td|th)\s*\{/m.test(css));
 
 const roleKeys = ['en','letter','ipa','translation','term','definition','focus','secondary','soft','heading','ink'];
 const calloutKeys = ['rule','example','important','tip','warning','question','practice','success','info','note','quote','abstract'];
+const contrastThresholds = { en:3, letter:3, ipa:4.5, translation:4.5, term:3, definition:4.5, focus:3, secondary:3, soft:4.5, heading:3, ink:4.5 };
+const toHex = value => Array.isArray(value) ? '#' + value.map(v => Math.round(v).toString(16).padStart(2,'0')).join('') : value;
+const luminance = value => {
+  const rgb = (Array.isArray(value) ? value : [1,3,5].map(i => parseInt(value.slice(i,i+2),16))).map(v => v/255).map(v => v <= .04045 ? v/12.92 : ((v+.055)/1.055)**2.4);
+  return .2126*rgb[0] + .7152*rgb[1] + .0722*rgb[2];
+};
+const contrastRatio = (a,b) => { const x=luminance(a), y=luminance(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
 const dir = path.join(root, 'palettes/06-juicy-tropical');
 const files = fs.readdirSync(dir).filter(name => /^\d{2}_.*\.json$/.test(name)).sort();
 assert.equal(files.length, 25, 'expected exactly 25 tropical palette JSON files');
@@ -40,6 +47,8 @@ for (const file of files) {
   for (const key of roleKeys) {
     assert.match(p.roles[key], /^#[0-9a-f]{6}$/i, file + ' roles.' + key);
     assert.match(p.dark[key], /^#[0-9a-f]{6}$/i, file + ' dark.' + key);
+    assert.ok(contrastRatio(p.roles[key], '#FBF8F0') >= contrastThresholds[key] - 0.02, file + ' light contrast ' + key);
+    assert.ok(contrastRatio(p.dark[key], '#202421') >= 4.5, file + ' dark contrast ' + key);
   }
   for (const key of calloutKeys) {
     assert.ok(p.callouts[key], file + ' callouts.' + key);
@@ -48,6 +57,11 @@ for (const file of files) {
   }
   for (const mode of ['table','darkTable']) {
     assert.ok(p[mode].header && p[mode].body, file + ' ' + mode + ' header/body');
+    const tableBg = mode === 'table' ? '#FFFFFF' : '#202421';
+    assert.ok(contrastRatio(p[mode].header.text, p[mode].header.background) >= 4.5, file + ' ' + mode + ' header contrast');
+    assert.ok(contrastRatio(p[mode].body.text, p[mode].body.background) >= 4.5, file + ' ' + mode + ' body contrast');
+    assert.ok(contrastRatio(p[mode].body.text, p[mode].body.alternateBackground) >= 4.5, file + ' ' + mode + ' alternate row contrast');
+    assert.ok(contrastRatio(p[mode].body.text, p[mode].body.selectedBackground) >= 4.5, file + ' ' + mode + ' selected row contrast');
     assert.ok(Array.isArray(p[mode].columns), file + ' ' + mode + ' columns');
     assert.ok(p[mode].columns.length >= 3, file + ' ' + mode + ' three columns');
     for (const column of p[mode].columns) {
@@ -55,6 +69,8 @@ for (const file of files) {
       for (const key of ['background','text','headerBackground','headerText','accent','border']) {
         assert.match(column[key], /^#[0-9a-f]{6}$/i, file + ' column.' + key);
       }
+      assert.ok(contrastRatio(column.text, column.background) >= 4.5, file + ' column body contrast');
+      assert.ok(contrastRatio(column.headerText, column.headerBackground) >= 4.5, file + ' column header contrast');
     }
   }
 }

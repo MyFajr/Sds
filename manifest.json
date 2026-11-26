@@ -1,9 +1,9 @@
 {
   "id": "english-study-design-studio",
   "name": "English Study Design Studio",
-  "version": "0.9.21",
+  "version": "0.9.22",
   "minAppVersion": "1.5.0",
-  "description": "Adds palette collection ZIP import/export with category assignment and safe additive import, alongside ESDS palette schema v4 and styling improvements.",
+  "description": "Modern category picker for palette ZIP and JSON import/export, with automatic category naming from source files.",
   "author": "Custom personal plugin",
   "isDesktopOnly": false
 }

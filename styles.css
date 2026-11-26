@@ -4156,3 +4156,27 @@ body.theme-dark .esds-preview.bg-28-saffron-cream, .esds-preview.esds-preview-da
 
 /* Row states have priority over per-column base fills. */
 .markdown-preview-view.esds-note table tbody tr.is-selected td,.esds-preview table tbody tr.is-selected td{background:var(--esds-table-selected-bg,var(--esds-table-alternate-bg,rgba(var(--esds-callout-info),.10)))!important;}
+
+
+/* ESDS 0.9.22 — unified category picker for ZIP and single-palette imports */
+.esds-category-picker-modal .modal-content { display:flex; flex-direction:column; gap:12px; }
+.esds-category-picker-description { margin:0; color:var(--text-muted); font-size:var(--font-ui-small); line-height:1.5; }
+.esds-category-picker-list { display:flex; flex-direction:column; gap:7px; max-height:min(42vh,360px); overflow-y:auto; overscroll-behavior:contain; }
+.esds-category-picker-option { display:flex; align-items:center; gap:11px; width:100%; min-height:54px; padding:10px 12px; border:1px solid var(--background-modifier-border); border-radius:12px; background:var(--background-secondary); color:var(--text-normal); text-align:left; cursor:pointer; }
+.esds-category-picker-option:active { background:var(--background-modifier-hover); }
+.esds-category-picker-option-icon { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border-radius:10px; background:var(--background-modifier-hover); color:var(--interactive-accent); font-size:18px; }
+.esds-category-picker-option-text { display:flex; flex:1; min-width:0; flex-direction:column; gap:3px; }
+.esds-category-picker-option-text strong { overflow-wrap:anywhere; font-size:var(--font-ui-medium); }
+.esds-category-picker-option-text small,.esds-category-picker-create small { color:var(--text-muted); font-size:var(--font-ui-smaller); }
+.esds-category-picker-check { display:grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--interactive-accent); color:var(--text-on-accent); font-weight:700; }
+.esds-category-picker-create { display:flex; flex-direction:column; gap:8px; padding:13px; border:1px dashed var(--background-modifier-border); border-radius:13px; background:var(--background-primary); }
+.esds-category-picker-create > strong { font-size:var(--font-ui-medium); }
+.esds-category-picker-input { width:100%; min-height:42px; }
+.esds-category-picker-create-button { width:100%; min-height:42px; white-space:normal; }
+.esds-category-picker-footer { display:flex; justify-content:flex-end; padding-top:2px; }
+@media (max-width:600px) {
+  .esds-category-picker-modal { width:calc(100vw - 24px); max-width:calc(100vw - 24px); }
+  .esds-category-picker-modal .modal-content { padding-bottom:max(8px,env(safe-area-inset-bottom)); }
+  .esds-category-picker-list { max-height:38vh; }
+  .esds-category-picker-option { min-height:58px; }
+}

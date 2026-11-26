@@ -22,8 +22,8 @@ assert.ok(main.includes('payload = { schemaVersion: 4, type: \'esds-palette\', p
 assert.ok(main.includes('LEGACY_ROLE_KEYS.every'));
 assert.ok(main.includes("key === 'letter' ? roles.en : null"));
 assert.ok(css.includes('var(--esds-letter'));
-assert.ok(!/^\\s*\\.st-lt\\s*\\{/m.test(css));
-assert.ok(!/^\\s*(?:table|td|th)\\s*\\{/m.test(css));
+assert.ok(!/^\s*\.st-lt\s*\{/m.test(css));
+assert.ok(!/^\s*(?:table|td|th)\s*\{/m.test(css));
 
 const roleKeys = ['en','letter','ipa','translation','term','definition','focus','secondary','soft','heading','ink'];
 const calloutKeys = ['rule','example','important','tip','warning','question','practice','success','info','note','quote','abstract'];

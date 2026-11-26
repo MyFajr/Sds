@@ -25,7 +25,7 @@ assert.ok(css.includes('var(--esds-letter'));
 assert.ok(!/^\s*\.st-lt\s*\{/m.test(css));
 assert.ok(!/^\s*(?:table|td|th)\s*\{/m.test(css));
 assert.ok(css.length > 200000, 'full original stylesheet must be preserved');
-const cssWithoutComments = css.replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
+const cssWithoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
 let cssDepth = 0;
 for (const char of cssWithoutComments) { if (char === '{') cssDepth++; if (char === '}') cssDepth--; assert.ok(cssDepth >= 0, 'CSS braces must not close early'); }
 assert.equal(cssDepth, 0, 'CSS braces must be balanced');

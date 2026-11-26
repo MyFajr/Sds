@@ -75,5 +75,13 @@
     "minAppVersion": "1.5.0",
     "description": "Adds st-lt for foreign letters/short letter groups, distinct styling, and palette-independent table column design guidance."
   },
-  "0.9.19": "1.5.0"
+  "0.9.19": "1.5.0",
+  "0.9.20": {
+    "minAppVersion": "1.5.0",
+    "description": "Accessible studio polish plus palette category selection, JSON/ZIP import, ZIP category export and duplicate-safe imports."
+  },
+  "0.9.21": {
+    "minAppVersion": "1.5.0",
+    "description": "Unified favorites, current-selection summary, destructive-action confirmations, palette-background reset and improved catalogue search."
+  }
 }

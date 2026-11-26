@@ -3279,6 +3279,48 @@ class DesignStudioModal extends Modal {
     }
   }
 
+  choosePaletteCategory({ title = 'Выбор категории', categories = [], defaultCategory = null, suggestedName = '', allowCreate = true } = {}) {
+    return new Promise(resolve => {
+      const modal = new Modal(this.app);
+      modal.modalEl.addClass('esds-category-picker-modal');
+      modal.titleEl.setText(title);
+      const root = modal.contentEl;
+      root.empty();
+      root.createEl('p', { cls: 'esds-category-picker-description', text: 'Выбери существующую категорию или создай новую. Название из файла уже подставлено.' });
+      const list = root.createDiv({ cls: 'esds-category-picker-list' });
+      let selected = categories.includes(defaultCategory) ? defaultCategory : null;
+      const finish = value => { modal.close(); resolve(value); };
+      categories.forEach(name => {
+        const button = list.createEl('button', { cls: 'esds-category-picker-option', attr: { type: 'button', 'aria-pressed': String(name === selected) } });
+        const icon = button.createSpan({ cls: 'esds-category-picker-option-icon', text: '▰' });
+        const textWrap = button.createSpan({ cls: 'esds-category-picker-option-text' });
+        textWrap.createEl('strong', { text: name });
+        textWrap.createEl('small', { text: name === defaultCategory ? 'Текущая категория' : 'Существующая категория' });
+        const check = button.createSpan({ cls: 'esds-category-picker-check', text: name === selected ? '✓' : '' });
+        button.addEventListener('click', () => finish({ mode: 'existing', name }));
+      });
+      if (allowCreate) {
+        const create = root.createDiv({ cls: 'esds-category-picker-create' });
+        create.createEl('strong', { text: 'Новая категория' });
+        create.createEl('small', { text: 'Название автоматически взято из файла — при желании его можно изменить.' });
+        const input = create.createEl('input', { cls: 'esds-text-input esds-category-picker-input', attr: { type: 'text', maxlength: '80', placeholder: 'Название новой категории' } });
+        input.value = suggestedName || '';
+        const createButton = create.createEl('button', { cls: 'esds-button esds-btn-violet esds-category-picker-create-button', text: 'Создать категорию и продолжить', attr: { type: 'button' } });
+        createButton.addEventListener('click', () => {
+          const name = input.value.trim();
+          if (!name) { new Notice('Введи название новой категории.'); input.focus(); return; }
+          const existing = categories.find(item => item.toLocaleLowerCase() === name.toLocaleLowerCase());
+          finish(existing ? { mode: 'existing', name: existing } : { mode: 'create', name });
+        });
+        input.addEventListener('keydown', event => { if (event.key === 'Enter') createButton.click(); });
+      }
+      const footer = root.createDiv({ cls: 'esds-category-picker-footer' });
+      const cancel = footer.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Отмена', attr: { type: 'button' } });
+      cancel.addEventListener('click', () => finish(null));
+      modal.onClose = () => resolve(null);
+      modal.open();
+    });
+  }
   async readPaletteZipEntries(buffer) {
     const bytes = new Uint8Array(buffer);
     const view = new DataView(buffer);
@@ -3332,9 +3374,11 @@ class DesignStudioModal extends Modal {
         const entries = await this.readPaletteZipEntries(await file.arrayBuffer());
         const candidates = [];
         const errors = [];
+        let manifestName = '';
         for (const entry of entries) {
           try {
             const parsed = JSON.parse(entry.text);
+            if (parsed && parsed.type === 'esds-palette-collection') { manifestName = String(parsed.name || parsed.title || '').trim(); continue; }
             const raw = parsed.palette || parsed;
             if (!raw || typeof raw !== 'object' || !raw.name || !raw.roles || !LEGACY_ROLE_KEYS.every(key => isHexColor(raw.roles[key]))) continue;
             const schema = Number(parsed.schemaVersion || 1);
@@ -3343,21 +3387,18 @@ class DesignStudioModal extends Modal {
           } catch (error) { errors.push(`${entry.name}: ${error.message || 'ошибка JSON'}`); }
         }
         if (!candidates.length) throw new Error('В ZIP не найдено корректных JSON-палитр ESDS.');
-        const categories = this.getCategories('palettes') || [];
-        const names = categories.map(item => item.name);
-        let destination = defaultCategory && names.includes(defaultCategory) ? defaultCategory : null;
-        const promptText = `В архиве ${candidates.length} палитр.\\nКатегории: ${names.join(' · ')}\\n\\nВведи название существующей категории, чтобы добавить туда. Оставь поле пустым — будет создана новая категория «${baseName}» из имени ZIP-файла.`;
-        const choice = prompt(promptText, destination || '');
-        if (choice === null) return;
-        destination = choice.trim();
-        const createNew = !destination;
-        if (createNew) destination = baseName;
-        const categoryExists = names.some(name => name.toLocaleLowerCase() === destination.toLocaleLowerCase());
-        if (createNew && categoryExists) destination = baseName + ' (импорт)';
-        if (!createNew && !categoryExists) {
-          const createInstead = confirm(`Категории «${destination}» нет. Создать её?`);
-          if (!createInstead) return;
-        }
+        const categoryMeta = this.getCategories('palettes') || [];
+        const names = [...new Set([...categoryMeta.map(item => item.name), ...this.allPalettes().map(item => item.category).filter(Boolean)])];
+        const suggestedName = manifestName || baseName;
+        const choice = await this.choosePaletteCategory({
+          title: `Импорт коллекции · ${candidates.length} палитр`,
+          categories: names,
+          defaultCategory: defaultCategory && names.includes(defaultCategory) ? defaultCategory : null,
+          suggestedName,
+          allowCreate: true
+        });
+        if (!choice) return;
+        let destination = choice.name;
         const existing = this.allPalettes();
         const seenIds = new Set(existing.map(item => String(item.id || '').toLowerCase()));
         const seenNames = new Set(existing.map(item => String(item.name || '').trim().toLowerCase()));
@@ -3412,13 +3453,17 @@ class DesignStudioModal extends Modal {
   }
   async exportPaletteCategoryZip(categoryName = null) {
     const all = this.allPalettes();
-    const categories = [...new Set(all.map(item => item.category || 'Мои палитры'))];
-    let category = categoryName && categories.includes(categoryName) ? categoryName : null;
-    if (!category) {
-      category = prompt(`Какую категорию экспортировать?\\n${categories.join(' · ')}`, categories[0] || '');
-      if (category === null || !category.trim()) return;
-      category = category.trim();
-    }
+    const meta = this.getCategories('palettes') || [];
+    const categories = [...new Set([...meta.map(item => item.name), ...all.map(item => item.category || 'Мои палитры')])];
+    if (!categories.length) { new Notice('В библиотеке пока нет категорий палитр.'); return; }
+    const choice = await this.choosePaletteCategory({
+      title: 'Экспорт ZIP-коллекции',
+      categories,
+      defaultCategory: categoryName && categories.includes(categoryName) ? categoryName : null,
+      allowCreate: false
+    });
+    if (!choice) return;
+    const category = choice.name;
     const items = all.filter(item => (item.category || 'Мои палитры') === category);
     if (!items.length) { new Notice(`В категории «${category}» нет палитр.`); return; }
     const encoder = new TextEncoder();
@@ -3453,10 +3498,31 @@ class DesignStudioModal extends Modal {
     const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.json,.esds-theme.json,application/json' } });
     input.style.display = 'none';
     input.addEventListener('change', async () => {
-      const file = input.files && input.files[0]; if (!file) return;
-      try { const raw = await file.text(); const data = JSON.parse(raw); await this.importJson(kind, data); }
-      catch (error) { console.error('ESDS import failed:', error); new Notice(error && error.message ? `Импорт не выполнен: ${error.message}` : 'Не удалось импортировать файл. Проверь формат JSON.'); }
-      input.remove();
+      const file = input.files && input.files[0]; if (!file) { input.remove(); return; }
+      try {
+        const data = JSON.parse(await file.text());
+        if (kind === 'palette') {
+          const palette = data.palette || data;
+          const meta = this.getCategories('palettes') || [];
+          const categories = [...new Set([...meta.map(item => item.name), ...this.allPalettes().map(item => item.category).filter(Boolean)])];
+          const embeddedCategory = String(palette.category || '').trim();
+          const suggestedName = embeddedCategory || file.name.replace(/\\.json$/i, '').replace(/\\.esds-theme$/i, '').trim() || palette.name || 'Новая коллекция';
+          const choice = await this.choosePaletteCategory({
+            title: `Импорт палитры · ${palette.name || file.name}`,
+            categories,
+            defaultCategory: embeddedCategory && categories.includes(embeddedCategory) ? embeddedCategory : (this.paletteCategory && categories.includes(this.paletteCategory) ? this.paletteCategory : null),
+            suggestedName,
+            allowCreate: true
+          });
+          if (!choice) return;
+          palette.category = choice.name;
+          if (data.palette) data.palette = palette;
+          await this.importJson(kind, data);
+        } else {
+          await this.importJson(kind, data);
+        }
+      } catch (error) { console.error('ESDS import failed:', error); new Notice(error && error.message ? `Импорт не выполнен: ${error.message}` : 'Не удалось импортировать файл. Проверь формат JSON.'); }
+      finally { input.remove(); }
     });
     input.click();
   }

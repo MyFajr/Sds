@@ -340,7 +340,10 @@ const BUILTIN_BG_IDS = new Set(BACKGROUNDS.map(item => item.id));
 const LEGACY_LIBRARY_PATH = '.obsidian/english-study-design-studio/user-library.json';
 const LIBRARY_SCHEMA = 3;
 // Keep legacy serialized role keys so existing palette files remain compatible: `en` now labels foreign-language text, `ipa` labels pronunciation/transcription.
-const ROLE_KEYS = ['en', 'ipa', 'translation', 'term', 'definition', 'focus', 'secondary', 'soft', 'heading', 'ink'];
+const ROLE_KEYS = ['en', 'letter', 'ipa', 'translation', 'term', 'definition', 'focus', 'secondary', 'soft', 'heading', 'ink'];
+const LEGACY_ROLE_KEYS = ROLE_KEYS.filter(key => key !== 'letter');
+const TABLE_COLOR_KEYS = ['background', 'text', 'headerBackground', 'headerText', 'border', 'stripeBackground'];
+const TABLE_COLUMN_COLOR_KEYS = ['background', 'text', 'headerBackground', 'headerText', 'border'];
 const CALLOUT_KEYS = CALLOUTS.map(([key]) => key);
 const BLOCK_FRAME_PRESET_KEYS = ['classic', 'dashed', 'dotted', 'double', 'left', 'none', 'top'];
 const THEME_PACK_SCHEMA_VERSION = 1;
@@ -753,20 +756,53 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function normalizePaletteTable(source) {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+  const result = {};
+  TABLE_COLOR_KEYS.forEach(key => { if (isValidPaletteColor(source[key])) result[key] = colorToHex(source[key]); });
+  if (Array.isArray(source.columns)) {
+    const columns = source.columns.slice(0, 16).map(column => {
+      if (!column || typeof column !== 'object' || Array.isArray(column)) return {};
+      return Object.fromEntries(TABLE_COLUMN_COLOR_KEYS.filter(key => isValidPaletteColor(column[key])).map(key => [key, colorToHex(column[key])]));
+    });
+    if (columns.some(column => Object.keys(column).length)) result.columns = columns;
+  }
+  return Object.keys(result).length ? result : null;
+}
+function paletteTableCss(selectors, table) {
+  if (!table || typeof table !== 'object') return '';
+  const names = { background:'bg', text:'text', headerBackground:'header-bg', headerText:'header-text', border:'border', stripeBackground:'stripe-bg' };
+  const vars = TABLE_COLOR_KEYS.filter(key => isValidPaletteColor(table[key])).map(key => `--esds-table-${names[key]}:${colorToHex(table[key])};`);
+  const columns = (Array.isArray(table.columns) ? table.columns : []).slice(0,16).map((column,index) => {
+    if (!column || typeof column !== 'object') return '';
+    const n=index+1, body=[], header=[];
+    if (isValidPaletteColor(column.background)) body.push(`background-color:${colorToHex(column.background)};`);
+    if (isValidPaletteColor(column.text)) body.push(`color:${colorToHex(column.text)};`);
+    if (isValidPaletteColor(column.border)) body.push(`border-color:${colorToHex(column.border)};`);
+    if (isValidPaletteColor(column.headerBackground)) header.push(`background-color:${colorToHex(column.headerBackground)};`);
+    if (isValidPaletteColor(column.headerText)) header.push(`color:${colorToHex(column.headerText)};`);
+    if (isValidPaletteColor(column.border)) header.push(`border-color:${colorToHex(column.border)};`);
+    return (body.length ? `${selectors} table tbody td:nth-child(${n}){${body.join('')}}` : '') +
+      (header.length ? `${selectors} table thead th:nth-child(${n}){${header.join('')}}` : '');
+  }).join('');
+  return (vars.length ? `${selectors}{${vars.join('')}}` : '') + columns;
+}
 function makePaletteCss(palette) {
   const cls = `esds-palette-${palette.id}`;
   const roles = palette.roles || {};
   const callouts = palette.callouts || {};
   const darkRoles = palette.dark || roles;
   const darkCallouts = palette.darkCallouts || callouts;
+  const lightTable = normalizePaletteTable(palette.table);
+  const darkTable = normalizePaletteTable(palette.darkTable) || lightTable;
   const selectors = [
     `.markdown-preview-view.esds-note.${cls}`,
     `.markdown-source-view.esds-note.${cls}`,
     `.esds-preview.${cls}`
   ].join(',');
-  const roleVars = ROLE_KEYS.map(key => `--esds-${key}: ${isHexColor(roles[key]) ? roles[key] : '#777777'};`).join(' ');
+  const roleVars = ROLE_KEYS.map(key => { const value = isHexColor(roles[key]) ? roles[key] : (key === 'letter' && isHexColor(roles.ipa) ? roles.ipa : '#777777'); return `--esds-${key}: ${value};`; }).join(' ');
   const calloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(callouts[key])};`).join(' ');
-  const darkRoleVars = ROLE_KEYS.map(key => `--esds-${key}: ${isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(roles[key]) ? roles[key] : '#dddddd')};`).join(' ');
+  const darkRoleVars = ROLE_KEYS.map(key => { const fallback = key === 'letter' ? (darkRoles.ipa || roles.letter || roles.ipa) : roles[key]; const value = isHexColor(darkRoles[key]) ? darkRoles[key] : (isHexColor(fallback) ? fallback : '#dddddd'); return `--esds-${key}: ${value};`; }).join(' ');
   const darkCalloutVars = CALLOUT_KEYS.map(key => `--esds-callout-${key}: ${rgbValue(darkCallouts[key])};`).join(' ');
   const mapVars = (fill, text, border) => CALLOUT_KEYS.map(key => {
     const vars = [];
@@ -790,7 +826,7 @@ function makePaletteCss(palette) {
     const previewSelector = `${modePrefix}.esds-preview.esds-frames-from-palette.${cls} .esds-demo-callout.esds-callout-${type}`;
     return `${noteSelector},${previewSelector}{border-style:${preset.style} !important;border-width:${widths} !important;border-radius:${radius}px !important;}`;
   }).join('\n');
-  return `${selectors}{${roleVars} ${calloutVars} ${lightExtra}} ${darkSelectors}{${darkRoleVars} ${darkCalloutVars} ${darkExtra}}\n${frameCss('light')}\n${frameCss('dark')}`;
+  return `${selectors}{${roleVars} ${calloutVars} ${lightExtra}} ${darkSelectors}{${darkRoleVars} ${darkCalloutVars} ${darkExtra}}\n${paletteTableCss(selectors, lightTable)}\n${paletteTableCss(darkSelectors, darkTable)}\n${frameCss('light')}\n${frameCss('dark')}`;
 }
 
 function mergeStyleProps(base, override) {
@@ -1134,7 +1170,7 @@ class PreviewModal extends Modal {
   constructor(app, studio) { super(app); this.studio = studio; }
   onOpen() {
     this.modalEl.addClass('esds-preview-modal');
-    this.contentEl.addClass('esds-preview-modal-content');
+    this.contentEl.addClass('esds-preview-modal-content', 'esds-library-preview-content');
     this.render();
   }
   onClose() { this.contentEl.empty(); }
@@ -1148,7 +1184,7 @@ class PreviewModal extends Modal {
     title.createEl('h2', { text: 'Предпросмотр оформления' });
     title.createEl('p', { text: `${p.name} · ${b.label || b.name} · Геометрия рамок палитры` });
 
-    const preview = root.createDiv({ cls: `esds-preview ${p.id} esds-palette-${p.id} ${b.id} esds-frames-from-palette` });
+    const preview = root.createDiv({ cls: `esds-preview esds-library-large-preview ${p.id} esds-palette-${p.id} ${b.id} esds-frames-from-palette` });
     this.studio.renderPreview(preview);
 
     const actions = root.createDiv({ cls: 'esds-preview-actions' });
@@ -1310,12 +1346,13 @@ class PaletteBuilderModal extends Modal {
     lightBtn.addEventListener('click', () => { this.themeMode = 'light'; this.render(); });
     darkBtn.addEventListener('click', () => { this.themeMode = 'dark'; this.render(); });
     const swatches = body.createDiv({ cls: 'esds-color-grid' });
-    const labels = { en:'Иностранные слова', ipa:'Произношение / транскрипция', translation:'Перевод', term:'Термины', definition:'Определения', focus:'Главный акцент', secondary:'Второй акцент', soft:'Мягкий акцент', heading:'Заголовки', ink:'Основной текст' };
+    const labels = { en:'Иностранные слова и выражения', letter:'Иностранные буквы и короткие сочетания', ipa:'Произношение / транскрипция', translation:'Перевод', term:'Термины', definition:'Определения', focus:'Главный акцент', secondary:'Второй акцент', soft:'Мягкий акцент', heading:'Заголовки', ink:'Основной текст' };
     const currentRoles = this.themeMode === 'dark' ? (this.base.dark || this.base.roles) : this.base.roles;
     ROLE_KEYS.forEach(key => {
       const field = swatches.createDiv({ cls: 'esds-color-field' });
       field.createEl('label', { text: labels[key] });
-      const value = isHexColor(currentRoles[key]) ? currentRoles[key] : (this.base.roles[key] || '#777777');
+      const roleFallback = key === 'letter' ? (currentRoles.ipa || this.base.roles.ipa) : this.base.roles[key];
+      const value = isHexColor(currentRoles[key]) ? currentRoles[key] : (roleFallback || '#777777');
       const input = field.createEl('input', { attr: { type: 'color', value } });
       input.value = value; this.inputs[this.themeMode][key] = input;
       const editingMode = this.themeMode;
@@ -1325,6 +1362,42 @@ class PaletteBuilderModal extends Modal {
         if (this.palettePreview) this.palettePreview.style.setProperty(`--esds-${key}`, input.value);
       });
     });
+    const tableDetails = body.createEl('details', { cls: 'esds-palette-table-editor' });
+    tableDetails.createEl('summary', { text: 'Настройки таблиц и отдельных колонок' });
+    tableDetails.createEl('p', { cls: 'esds-section-note', text: 'Общие цвета задают основу. Цвета отдельных колонок можно настроить независимо; пустые параметры наследуют общие значения.' });
+    const tableModeKey = this.themeMode === 'dark' ? 'darkTable' : 'table';
+    const tableConfig = clone(this.base[tableModeKey] || (this.themeMode === 'dark' ? this.base.table : {}) || {});
+    const tableGrid = tableDetails.createDiv({ cls: 'esds-color-grid esds-table-base-grid' });
+    const tableLabels = { background:'Фон ячеек', text:'Текст ячеек', headerBackground:'Фон заголовка', headerText:'Текст заголовка', border:'Границы', stripeBackground:'Чётные строки' };
+    const tableFallbacks = { background:'#ffffff', text:currentRoles.ink || '#302d38', headerBackground:currentRoles.heading || '#51428d', headerText:'#ffffff', border:currentRoles.heading || '#51428d', stripeBackground:'#f3f4f8' };
+    const saveTableConfig = () => { this.base[tableModeKey] = clone(tableConfig); refreshLinkedPreview(); };
+    TABLE_COLOR_KEYS.forEach(key => {
+      const field=tableGrid.createDiv({cls:'esds-color-field'});
+      field.createEl('label',{text:tableLabels[key]});
+      const value=isHexColor(tableConfig[key])?tableConfig[key]:tableFallbacks[key];
+      const input=field.createEl('input',{attr:{type:'color',value}});
+      input.addEventListener('input',()=>{tableConfig[key]=input.value;saveTableConfig();});
+    });
+    const columnsHeading=tableDetails.createEl('h4',{text:'Цвета отдельных колонок'});
+    columnsHeading.addClass('esds-table-columns-heading');
+    const columnsGrid=tableDetails.createDiv({cls:'esds-table-columns-grid'});
+    const columnLabels={background:'Фон',text:'Текст',headerBackground:'Фон заголовка',headerText:'Текст заголовка',border:'Граница'};
+    for(let index=0;index<4;index++){
+      const column=columnsGrid.createDiv({cls:'esds-table-column-editor'});
+      column.createEl('strong',{text:`Колонка ${index+1}`});
+      const existingColumn=tableConfig.columns&&tableConfig.columns[index]?tableConfig.columns[index]:{};
+      TABLE_COLUMN_COLOR_KEYS.forEach(key=>{
+        const field=column.createDiv({cls:'esds-color-field'});
+        field.createEl('label',{text:columnLabels[key]});
+        const value=isHexColor(existingColumn[key])?existingColumn[key]:tableFallbacks[key];
+        const input=field.createEl('input',{attr:{type:'color',value}});
+        input.addEventListener('input',()=>{
+          if(!Array.isArray(tableConfig.columns))tableConfig.columns=[];
+          tableConfig.columns[index]={...(tableConfig.columns[index]||{}),[key]:input.value};
+          saveTableConfig();
+        });
+      });
+    }
     const calloutColorsSection = body.createDiv({ cls: 'esds-palette-callout-colors' });
     calloutColorsSection.createEl('h3', { text: 'Цвета информационных блоков' });
     calloutColorsSection.createEl('p', { cls: 'esds-section-note', text: 'Здесь задаются отдельные цвета и геометрия рамки каждого типа блока. Эти рамки применяются вместе с выбранной палитрой; настройки конкретной заметки могут их переопределить.' });
@@ -1420,6 +1493,12 @@ class PaletteBuilderModal extends Modal {
     termLine.createEl('span', { cls: 'st-de', text: 'краткое определение' });
     articleSample.createEl('p', { cls: 'st-mi', text: 'Главная мысль и смысловой акцент.' });
     articleSample.createEl('p', { cls: 'st-nu', text: 'Показатель: 3,5%' });
+    const tableSample = articleSample.createEl('table', { cls: 'esds-preview-table' });
+    const tableHead = tableSample.createEl('thead').createEl('tr');
+    ['Понятие','Значение','Пример'].forEach(label => tableHead.createEl('th',{text:label}));
+    const tableBody = tableSample.createEl('tbody');
+    const tableRow = tableBody.createEl('tr');
+    ['Термин','Определение','Контекст'].forEach(value => tableRow.createEl('td',{text:value}));
     this.studio.renderBlockGallery(this.palettePreview, ['rule', 'example', 'important', 'tip', 'warning', 'question']);
     const applyPaletteFramePreview = () => {
       this.palettePreview.querySelectorAll('.esds-demo-callout').forEach(node => {
@@ -1452,6 +1531,8 @@ class PaletteBuilderModal extends Modal {
       palette.defaultBlocks = palette.defaultBlocks || this.studio.selectedBlocks.id;
       palette.roles = { ...(palette.roles || {}) };
       palette.dark = { ...(palette.dark || palette.roles) };
+      if (!isHexColor(palette.roles.letter)) palette.roles.letter = palette.roles.ipa || '#7450a8';
+      if (!isHexColor(palette.dark.letter)) palette.dark.letter = palette.dark.ipa || palette.roles.letter;
       ROLE_KEYS.forEach(key => {
         if (this.inputs.light[key]) palette.roles[key] = this.inputs.light[key].value;
         if (this.inputs.dark[key]) palette.dark[key] = this.inputs.dark[key].value;
@@ -2360,7 +2441,7 @@ class DesignStudioModal extends Modal {
   paletteSwatches(palette) {
     const darkMode = document.body.classList.contains('theme-dark');
     const roleKeys = [
-      ['en', 'Иностранные слова'], ['ipa', 'Произношение / транскрипция'], ['translation', 'Перевод'],
+      ['en', 'Иностранные слова'], ['letter', 'Иностранные буквы'], ['ipa', 'Произношение / транскрипция'], ['translation', 'Перевод'],
       ['term', 'Термин'], ['focus', 'Акцент'], ['secondary', 'Второй акцент']
     ];
     return roleKeys.map(([key, label]) => ({
@@ -2897,8 +2978,15 @@ class DesignStudioModal extends Modal {
     }
     const roles = darkMode && palette.dark ? palette.dark : palette.roles;
     if (roles) {
-      ROLE_KEYS.forEach(key => {
-        if (roles[key]) container.style.setProperty(`--esds-${key}`, roles[key]);
+      ROLE_KEYS.forEach(key => { const value = roles[key] || (key === 'letter' ? roles.ipa : null); if (value) container.style.setProperty(`--esds-${key}`, value); });
+    }
+    const tableTheme = normalizePaletteTable(darkMode ? (palette.darkTable || palette.table) : palette.table);
+    if (tableTheme) {
+      const names={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',border:'border',stripeBackground:'stripe-bg'};
+      TABLE_COLOR_KEYS.forEach(key=>{if(tableTheme[key])container.style.setProperty(`--esds-table-${names[key]}`,tableTheme[key]);});
+      (tableTheme.columns||[]).forEach((column,index)=>{
+        const n=index+1, columnNames={background:'bg',text:'text',headerBackground:'header-bg',headerText:'header-text',border:'border'};
+        TABLE_COLUMN_COLOR_KEYS.forEach(key=>{if(column[key])container.style.setProperty(`--esds-table-col-${n}-${columnNames[key]}`,column[key]);});
       });
     }
     const callouts = darkMode && palette.darkCallouts ? palette.darkCallouts : palette.callouts;
@@ -3321,14 +3409,16 @@ class DesignStudioModal extends Modal {
     }
     if (kind === 'palette') {
       const paletteSchemaVersion = Number(data.schemaVersion || 1);
-      if (!Number.isInteger(paletteSchemaVersion) || paletteSchemaVersion < 1 || paletteSchemaVersion > 3) throw new Error('Версия формата палитры не поддерживается.');
+      if (!Number.isInteger(paletteSchemaVersion) || paletteSchemaVersion < 1 || paletteSchemaVersion > 4) throw new Error('Версия формата палитры не поддерживается.');
       let p = data.palette || data;
       const roles = p.roles || {};
-      if (!p.name || !ROLE_KEYS.every(key => isHexColor(roles[key]))) throw new Error('Palette roles are missing or invalid');
-      const palette = clone(p); palette.id = `user-${slugify(p.name)}-${Date.now().toString(36).slice(-4)}`; palette.createdAt = new Date().toISOString(); palette.updatedAt = palette.createdAt; palette.source = 'user';
+      if (!p.name || !LEGACY_ROLE_KEYS.every(key => isHexColor(roles[key]))) throw new Error('Palette roles are missing or invalid');
+      const palette = clone(p); palette.roles = { ...roles, letter: isHexColor(roles.letter) ? roles.letter : roles.ipa }; palette.id = `user-${slugify(p.name)}-${Date.now().toString(36).slice(-4)}`; palette.createdAt = new Date().toISOString(); palette.updatedAt = palette.createdAt; palette.source = 'user';
       palette.defaultBackground = this.findBackground(p.defaultBackground)?.id || this.selectedBackground.id;
       palette.defaultBlocks = this.findBlockStyle(p.defaultBlocks) ? p.defaultBlocks : this.selectedBlocks.id;
-      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : palette.roles[key]]));
+      palette.dark = Object.fromEntries(ROLE_KEYS.map(key => [key, isHexColor(palette.dark && palette.dark[key]) ? palette.dark[key] : (key === 'letter' ? (palette.dark?.ipa || palette.roles.letter) : palette.roles[key])]));
+      palette.table = normalizePaletteTable(palette.table) || undefined;
+      palette.darkTable = normalizePaletteTable(palette.darkTable) || palette.table || undefined;
       palette.callouts = palette.callouts || clone(PALETTES[0].callouts);
       palette.darkCallouts = palette.darkCallouts || clone(palette.callouts);
       ['calloutFills','calloutTexts','calloutBorders','darkCalloutFills','darkCalloutTexts','darkCalloutBorders'].forEach(mapName => {
@@ -3421,7 +3511,7 @@ class DesignStudioModal extends Modal {
     let item, payload;
     if (kind === 'palette') {
       item = this.selectedPalette;
-      payload = { schemaVersion: 3, type: 'esds-palette', palette: item };
+      payload = { schemaVersion: 4, type: 'esds-palette', palette: item };
     } else if (kind === 'background') {
       item = this.selectedBackground;
       payload = { schemaVersion: 2, type: 'esds-background', background: item };

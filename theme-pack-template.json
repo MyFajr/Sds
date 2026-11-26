@@ -20,7 +20,8 @@
         "secondary": "#C27A18",
         "soft": "#9555B5",
         "heading": "#6540A2",
-        "ink": "#352A45"
+        "ink": "#352A45",
+        "letter": "#bd4a85"
       },
       "dark": {
         "en": "#8FC1FF",
@@ -32,7 +33,8 @@
         "secondary": "#F2C078",
         "soft": "#D1A2F0",
         "heading": "#D0B3FF",
-        "ink": "#F0E8F7"
+        "ink": "#F0E8F7",
+        "letter": "#f1a6d0"
       },
       "callouts": {
         "rule": [
@@ -228,6 +230,68 @@
           "width": 2,
           "radius": 10
         }
+      },
+      "table": {
+        "background": "#fffaf5",
+        "text": "#3d3440",
+        "headerBackground": "#f3d7e2",
+        "headerText": "#563047",
+        "border": "#d9a9bd",
+        "stripeBackground": "#fff1f5",
+        "columns": [
+          {
+            "background": "#fffaf5",
+            "text": "#3d3440",
+            "headerBackground": "#f3d7e2",
+            "headerText": "#563047",
+            "border": "#d9a9bd"
+          },
+          {
+            "background": "#f7fbff",
+            "text": "#304052",
+            "headerBackground": "#dceaf7",
+            "headerText": "#29455f",
+            "border": "#a9c4dc"
+          },
+          {
+            "background": "#f7fff9",
+            "text": "#31463a",
+            "headerBackground": "#dcefe1",
+            "headerText": "#2e5940",
+            "border": "#a9d0b6"
+          }
+        ]
+      },
+      "darkTable": {
+        "background": "#28212b",
+        "text": "#eee5ed",
+        "headerBackground": "#54394e",
+        "headerText": "#fff0f8",
+        "border": "#8e647e",
+        "stripeBackground": "#302632",
+        "columns": [
+          {
+            "background": "#28212b",
+            "text": "#eee5ed",
+            "headerBackground": "#54394e",
+            "headerText": "#fff0f8",
+            "border": "#8e647e"
+          },
+          {
+            "background": "#222a35",
+            "text": "#e4edf8",
+            "headerBackground": "#354b62",
+            "headerText": "#edf6ff",
+            "border": "#607b98"
+          },
+          {
+            "background": "#22302a",
+            "text": "#e3f0e6",
+            "headerBackground": "#365443",
+            "headerText": "#effff3",
+            "border": "#648d73"
+          }
+        ]
       }
     },
     "background": {

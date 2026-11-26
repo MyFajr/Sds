@@ -83,5 +83,9 @@
   "0.9.21": {
     "minAppVersion": "1.5.0",
     "description": "Adds additive palette collection ZIP import, category assignment from archive name, and category ZIP export."
+  },
+  "0.9.22": {
+    "minAppVersion": "1.5.0",
+    "description": "Modern category picker for ZIP and JSON palette import/export with automatic category names."
   }
 }

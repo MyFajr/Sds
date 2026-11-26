@@ -1,0 +1,970 @@
+{
+  "documentType": "ESDS palette design specification",
+  "documentVersion": "1.0",
+  "targetPluginVersion": "0.9.22",
+  "importStatus": "NOT_VERIFIED — review draft, not a confirmed import file",
+  "reference": {
+    "repository": "MyFajr/Sds",
+    "branch": "Newsds",
+    "template": "palette-template.json",
+    "templateSchemaVersion": 3
+  },
+  "palette": {
+    "$schemaNote": "Design-review specification, not an import-ready ESDS palette. The actual v3 palette template was inspected; additional design fields below are intentionally descriptive and require mapping/validation against ESDS 0.9.22.",
+    "name": "Tropical Voltage 1.0",
+    "mood": "Сочные тропические цвета, энергичный учебный интерфейс",
+    "description": "Полноценная выразительная учебная дизайн-система: папайя, манго, электрический фиолетовый и тропическая бирюза. Не пастельная и не серо-мутная; цвет используется семантически и системно.",
+    "concept": {
+      "primary": "papaya coral",
+      "secondary": "mango gold",
+      "tertiary": "electric violet",
+      "coolAccent": "tropical turquoise",
+      "neutral": "warm plum ink",
+      "designIntent": "яркий, профессиональный, контрастный интерфейс для длинных учебных заметок"
+    },
+    "light": {
+      "canvas": "#FFF9F2",
+      "surface": "#FFFFFF",
+      "surfaceRaised": "#FFF1E4",
+      "surfaceMuted": "#F9E7D8",
+      "surfaceInset": "#FFF4EB",
+      "text": "#30213D",
+      "textSecondary": "#65536E",
+      "textMuted": "#88768F",
+      "heading": "#43205E",
+      "headingAccent": "#C74468",
+      "link": "#006E82",
+      "linkHover": "#00576A",
+      "selection": "#F9C7D5",
+      "border": "#E7CFC5",
+      "borderStrong": "#CDA9B8",
+      "divider": "#E7B9B5",
+      "focus": "#6E35D5",
+      "shadow": "#3B1D4A1A",
+      "codeBackground": "#F2E8F8",
+      "codeText": "#542B79",
+      "quoteBackground": "#F4EAF8",
+      "quoteBorder": "#8C54C7",
+      "listMarker": "#D64B6C",
+      "table": {
+        "headerBackground": "#552A76",
+        "headerText": "#FFFFFF",
+        "rowBackground": "#FFFFFF",
+        "alternateRow": "#FFF0E6",
+        "border": "#E7CFC5",
+        "columns": {
+          "english": {
+            "background": "#E2F5FF",
+            "text": "#075B83"
+          },
+          "ipa": {
+            "background": "#F5E8FF",
+            "text": "#743A9D"
+          },
+          "translation": {
+            "background": "#E2F8EA",
+            "text": "#176B45"
+          },
+          "example": {
+            "background": "#FFF0E2",
+            "text": "#9A451C"
+          }
+        }
+      }
+    },
+    "dark": {
+      "canvas": "#17121F",
+      "surface": "#21192B",
+      "surfaceRaised": "#2C2038",
+      "surfaceMuted": "#34263F",
+      "surfaceInset": "#1B1524",
+      "text": "#F8EEF9",
+      "textSecondary": "#D3BEDD",
+      "textMuted": "#AA91B8",
+      "heading": "#FFD18A",
+      "headingAccent": "#FF8BA8",
+      "link": "#67DCEB",
+      "linkHover": "#A0F1F6",
+      "selection": "#5B315C",
+      "border": "#493653",
+      "borderStrong": "#76527D",
+      "divider": "#65415F",
+      "focus": "#C59BFF",
+      "shadow": "#00000055",
+      "codeBackground": "#30213D",
+      "codeText": "#E4C6FF",
+      "quoteBackground": "#2C2038",
+      "quoteBorder": "#B78AF0",
+      "listMarker": "#FF91AF",
+      "table": {
+        "headerBackground": "#3C2455",
+        "headerText": "#FFF3D6",
+        "rowBackground": "#21192B",
+        "alternateRow": "#2A2035",
+        "border": "#493653",
+        "columns": {
+          "english": {
+            "background": "#193A4B",
+            "text": "#A8E5FF"
+          },
+          "ipa": {
+            "background": "#382348",
+            "text": "#E1B8FF"
+          },
+          "translation": {
+            "background": "#193D32",
+            "text": "#A2F0C4"
+          },
+          "example": {
+            "background": "#482D25",
+            "text": "#FFC19A"
+          }
+        }
+      }
+    },
+    "typography": {
+      "body": {
+        "weight": 400,
+        "lineHeight": 1.65
+      },
+      "strong": {
+        "weight": 700
+      },
+      "h1": {
+        "weight": 800,
+        "color": "heading",
+        "accent": "headingAccent"
+      },
+      "h2": {
+        "weight": 750,
+        "color": "heading",
+        "accent": "electric violet"
+      },
+      "h3": {
+        "weight": 700,
+        "color": "headingAccent"
+      },
+      "h4": {
+        "weight": 650,
+        "color": "text"
+      },
+      "ipa": {
+        "weight": 600,
+        "letterSpacing": "slight",
+        "fontFallback": "system sans-serif"
+      },
+      "code": {
+        "background": "codeBackground",
+        "text": "codeText"
+      },
+      "rules": [
+        "Maintain clear hierarchy on narrow Android screens.",
+        "Avoid low-contrast colored body text.",
+        "Allow long English words, IPA and URLs to wrap safely."
+      ]
+    },
+    "semanticClasses": {
+      "st-le": {
+        "light": {
+          "text": "#A83B55",
+          "background": "#FFF0F2",
+          "border": "#E8A5B2",
+          "accent": "#A83B55"
+        },
+        "dark": {
+          "text": "#FF9EBA",
+          "background": "#3B1D2B",
+          "border": "#A94B70",
+          "accent": "#FF9EBA"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-mi": {
+        "light": {
+          "text": "#5930A8",
+          "background": "#F1E9FF",
+          "border": "#BDA2F0",
+          "accent": "#5930A8"
+        },
+        "dark": {
+          "text": "#D0B0FF",
+          "background": "#302044",
+          "border": "#8E68C2",
+          "accent": "#D0B0FF"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ac": {
+        "light": {
+          "text": "#C52C63",
+          "background": "#FFE3EC",
+          "border": "#F08CAB",
+          "accent": "#C52C63"
+        },
+        "dark": {
+          "text": "#FF77A8",
+          "background": "#4A1C35",
+          "border": "#C34D82",
+          "accent": "#FF77A8"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-so": {
+        "light": {
+          "text": "#B45B18",
+          "background": "#FFF0D9",
+          "border": "#E8BD83",
+          "accent": "#B45B18"
+        },
+        "dark": {
+          "text": "#FFC47A",
+          "background": "#432A1B",
+          "border": "#A66B3C",
+          "accent": "#FFC47A"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-te": {
+        "light": {
+          "text": "#006D83",
+          "background": "#DDF7FA",
+          "border": "#80C9D4",
+          "accent": "#006D83"
+        },
+        "dark": {
+          "text": "#66E0ED",
+          "background": "#173A43",
+          "border": "#3F9EAA",
+          "accent": "#66E0ED"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-fo": {
+        "light": {
+          "text": "#6D35B5",
+          "background": "#F0E5FF",
+          "border": "#BDA0E8",
+          "accent": "#6D35B5"
+        },
+        "dark": {
+          "text": "#C8A1FF",
+          "background": "#35234A",
+          "border": "#9268C4",
+          "accent": "#C8A1FF"
+        },
+        "usage": "Whole foreign words or phrases; do not use for isolated graphemes."
+      },
+      "st-tr": {
+        "light": {
+          "text": "#087A55",
+          "background": "#DDF8EA",
+          "border": "#8BD5B1",
+          "accent": "#087A55"
+        },
+        "dark": {
+          "text": "#71E0AE",
+          "background": "#183D30",
+          "border": "#4DA77F",
+          "accent": "#71E0AE"
+        },
+        "usage": "Translation or translated meaning."
+      },
+      "st-pr": {
+        "light": {
+          "text": "#A04486",
+          "background": "#FBE8F5",
+          "border": "#DDA6CC",
+          "accent": "#A04486"
+        },
+        "dark": {
+          "text": "#F0A9D7",
+          "background": "#45233D",
+          "border": "#B76B9E",
+          "accent": "#F0A9D7"
+        },
+        "usage": "IPA, phonetic transcription, pronunciation and romanization."
+      },
+      "st-de": {
+        "light": {
+          "text": "#405B78",
+          "background": "#EAF1F8",
+          "border": "#A9BDD1",
+          "accent": "#405B78"
+        },
+        "dark": {
+          "text": "#B6D4F2",
+          "background": "#253548",
+          "border": "#6585A5",
+          "accent": "#B6D4F2"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ex": {
+        "light": {
+          "text": "#B64A20",
+          "background": "#FFF0E6",
+          "border": "#E9A17F",
+          "accent": "#B64A20"
+        },
+        "dark": {
+          "text": "#FFA77C",
+          "background": "#48291F",
+          "border": "#B96C4C",
+          "accent": "#FFA77C"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-im": {
+        "light": {
+          "text": "#B5214E",
+          "background": "#FFE5ED",
+          "border": "#E88AA4",
+          "accent": "#B5214E"
+        },
+        "dark": {
+          "text": "#FF83A5",
+          "background": "#4C1D30",
+          "border": "#BF5579",
+          "accent": "#FF83A5"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-wa": {
+        "light": {
+          "text": "#A34A00",
+          "background": "#FFF0D5",
+          "border": "#E6B56D",
+          "accent": "#A34A00"
+        },
+        "dark": {
+          "text": "#FFC46C",
+          "background": "#473019",
+          "border": "#A87842",
+          "accent": "#FFC46C"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-qu": {
+        "light": {
+          "text": "#087C91",
+          "background": "#DDF7FB",
+          "border": "#81CBD7",
+          "accent": "#087C91"
+        },
+        "dark": {
+          "text": "#6AE4F1",
+          "background": "#183D45",
+          "border": "#469AA8",
+          "accent": "#6AE4F1"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-su": {
+        "light": {
+          "text": "#4B3194",
+          "background": "#EEE9FF",
+          "border": "#B3A4E6",
+          "accent": "#4B3194"
+        },
+        "dark": {
+          "text": "#C1B0FF",
+          "background": "#2C2447",
+          "border": "#8372C5",
+          "accent": "#C1B0FF"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-co": {
+        "light": {
+          "text": "#14744D",
+          "background": "#E2F7E9",
+          "border": "#91D0A6",
+          "accent": "#14744D"
+        },
+        "dark": {
+          "text": "#83E3A8",
+          "background": "#1D3C2B",
+          "border": "#5AA77A",
+          "accent": "#83E3A8"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-sc": {
+        "light": {
+          "text": "#6D6478",
+          "background": "#F0EDF4",
+          "border": "#C3B9CD",
+          "accent": "#6D6478"
+        },
+        "dark": {
+          "text": "#D0C5DA",
+          "background": "#302B39",
+          "border": "#887A98",
+          "accent": "#D0C5DA"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-no": {
+        "light": {
+          "text": "#79512C",
+          "background": "#F8EEDF",
+          "border": "#D9BE91",
+          "accent": "#79512C"
+        },
+        "dark": {
+          "text": "#EBC58C",
+          "background": "#3F3022",
+          "border": "#A88758",
+          "accent": "#EBC58C"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-nu": {
+        "light": {
+          "text": "#B04418",
+          "background": "#FFEBDD",
+          "border": "#E9A27D",
+          "accent": "#B04418"
+        },
+        "dark": {
+          "text": "#FFA77B",
+          "background": "#49291F",
+          "border": "#B66D4E",
+          "accent": "#FFA77B"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-qt": {
+        "light": {
+          "text": "#8846A8",
+          "background": "#F5E8FB",
+          "border": "#CBA7DC",
+          "accent": "#8846A8"
+        },
+        "dark": {
+          "text": "#DDA9F4",
+          "background": "#3B2447",
+          "border": "#9E70B7",
+          "accent": "#DDA9F4"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-fa": {
+        "light": {
+          "text": "#176B9B",
+          "background": "#E3F3FF",
+          "border": "#91C7E8",
+          "accent": "#176B9B"
+        },
+        "dark": {
+          "text": "#83D0FF",
+          "background": "#1E3546",
+          "border": "#568EAF",
+          "accent": "#83D0FF"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ar": {
+        "light": {
+          "text": "#A64C28",
+          "background": "#FCEBE2",
+          "border": "#DFA58E",
+          "accent": "#A64C28"
+        },
+        "dark": {
+          "text": "#F5A98B",
+          "background": "#482A24",
+          "border": "#B97860",
+          "accent": "#F5A98B"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ct": {
+        "light": {
+          "text": "#8B3F72",
+          "background": "#F8E8F2",
+          "border": "#D2A0C0",
+          "accent": "#8B3F72"
+        },
+        "dark": {
+          "text": "#E8A4CE",
+          "background": "#43263A",
+          "border": "#A86E91",
+          "accent": "#E8A4CE"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ca": {
+        "light": {
+          "text": "#9B6A13",
+          "background": "#FFF4D9",
+          "border": "#E3C477",
+          "accent": "#9B6A13"
+        },
+        "dark": {
+          "text": "#EBC66D",
+          "background": "#41341E",
+          "border": "#A88A47",
+          "accent": "#EBC66D"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-rs": {
+        "light": {
+          "text": "#19734B",
+          "background": "#E2F7EA",
+          "border": "#91D1A9",
+          "accent": "#19734B"
+        },
+        "dark": {
+          "text": "#7FE0A5",
+          "background": "#1C3C2B",
+          "border": "#55A77A",
+          "accent": "#7FE0A5"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-da": {
+        "light": {
+          "text": "#A04C70",
+          "background": "#FBEAF1",
+          "border": "#DDA7BE",
+          "accent": "#A04C70"
+        },
+        "dark": {
+          "text": "#F0A6C2",
+          "background": "#442637",
+          "border": "#AD6C89",
+          "accent": "#F0A6C2"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-pe": {
+        "light": {
+          "text": "#315FA5",
+          "background": "#E8F0FF",
+          "border": "#A6BDEB",
+          "accent": "#315FA5"
+        },
+        "dark": {
+          "text": "#9ABFFF",
+          "background": "#24334D",
+          "border": "#6889C2",
+          "accent": "#9ABFFF"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ev": {
+        "light": {
+          "text": "#B34D38",
+          "background": "#FDEAE5",
+          "border": "#E4A193",
+          "accent": "#B34D38"
+        },
+        "dark": {
+          "text": "#FF9F8C",
+          "background": "#492923",
+          "border": "#B76F61",
+          "accent": "#FF9F8C"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-td": {
+        "light": {
+          "text": "#087F78",
+          "background": "#DDF7F3",
+          "border": "#86D1C8",
+          "accent": "#087F78"
+        },
+        "dark": {
+          "text": "#70E3D6",
+          "background": "#193D3A",
+          "border": "#4AA59C",
+          "accent": "#70E3D6"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-ri": {
+        "light": {
+          "text": "#A72F35",
+          "background": "#FFE8E7",
+          "border": "#E69B9B",
+          "accent": "#A72F35"
+        },
+        "dark": {
+          "text": "#FF9296",
+          "background": "#481F26",
+          "border": "#B65B63",
+          "accent": "#FF9296"
+        },
+        "usage": "Dedicated semantic role; preserve meaning and visual distinction."
+      },
+      "st-lt": {
+        "light": {
+          "text": "#C02079",
+          "background": "#FFE5F3",
+          "border": "#ED91C3",
+          "accent": "#C02079"
+        },
+        "dark": {
+          "text": "#FF8BCB",
+          "background": "#4A1D38",
+          "border": "#C05B98",
+          "accent": "#FF8BCB"
+        },
+        "usage": "Single foreign letters/graphemes and sequences of any length; distinct from st-fo."
+      }
+    },
+    "callouts": {
+      "standardTypes": {
+        "note": "#B45B18",
+        "abstract": "#7040A8",
+        "info": "#087C91",
+        "todo": "#315FA5",
+        "tip": "#14744D",
+        "success": "#16834F",
+        "question": "#087C91",
+        "warning": "#B36A12",
+        "failure": "#B52F48",
+        "danger": "#C32645",
+        "bug": "#9B3D72",
+        "example": "#B64A20",
+        "quote": "#8846A8"
+      },
+      "aliases": {
+        "summary": "abstract",
+        "tldr": "abstract",
+        "hint": "tip",
+        "important": "danger",
+        "check": "success",
+        "done": "success",
+        "help": "question",
+        "faq": "question",
+        "caution": "warning",
+        "attention": "warning",
+        "fail": "failure",
+        "missing": "failure",
+        "error": "danger",
+        "cite": "quote"
+      },
+      "decorativeDictionaryStyles": [
+        {
+          "name": "mini",
+          "frame": "compact",
+          "description": "small padding; compact heading",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "underline",
+          "frame": "underline",
+          "description": "accent underline; no full frame",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "bar",
+          "frame": "left",
+          "description": "strong vertical accent bar",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "compact",
+          "frame": "classic",
+          "description": "reduced spacing and padding",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "soft",
+          "frame": "none",
+          "description": "soft tinted surface; no visible frame",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "outline",
+          "frame": "classic",
+          "description": "transparent fill; complete outline",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "card",
+          "frame": "classic",
+          "description": "raised card surface with soft shadow",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "gradient",
+          "frame": "classic",
+          "description": "subtle two-tone gradient surface",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "dashed",
+          "frame": "dashed",
+          "description": "dashed border",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "double",
+          "frame": "double",
+          "description": "double-line border",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "ribbon",
+          "frame": "left",
+          "description": "ribbon-like title accent",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "night",
+          "frame": "classic",
+          "description": "deep saturated dark surface",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "neon",
+          "frame": "classic",
+          "description": "glowing accent restrained for readability",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "mango",
+          "frame": "left",
+          "description": "mango yellow and papaya orange accent",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "coral",
+          "frame": "left",
+          "description": "coral-red accent",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "berry",
+          "frame": "classic",
+          "description": "berry magenta accent",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "lime",
+          "frame": "left",
+          "description": "vivid lime accent",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "electric",
+          "frame": "classic",
+          "description": "electric violet and cyan accent",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "aqua",
+          "frame": "classic",
+          "description": "turquoise aqua accent",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "sunset",
+          "frame": "classic",
+          "description": "coral-to-violet gradient",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "glass",
+          "frame": "classic",
+          "description": "translucent glass-like surface with readable fallback",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "frost",
+          "frame": "classic",
+          "description": "cool frosted surface",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "crystal",
+          "frame": "double",
+          "description": "crisp crystalline edge treatment",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "silver",
+          "frame": "classic",
+          "description": "silver neutral surface with strong text contrast",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "chrome",
+          "frame": "double",
+          "description": "metallic high-contrast frame",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "gold",
+          "frame": "classic",
+          "description": "warm gold accent",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "rose-gold",
+          "frame": "classic",
+          "description": "rose-gold accent",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "aurora",
+          "frame": "classic",
+          "description": "multi-hue aurora accent, restrained background",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        },
+        {
+          "name": "holo",
+          "frame": "classic",
+          "description": "holographic multi-accent edge",
+          "accent": "#E85D75",
+          "lightSurface": "#FFF0E6",
+          "darkSurface": "#40232D"
+        },
+        {
+          "name": "iridescent",
+          "frame": "classic",
+          "description": "iridescent accent with stable text color",
+          "accent": "#F0A928",
+          "lightSurface": "#F7E9FF",
+          "darkSurface": "#302344"
+        },
+        {
+          "name": "prism",
+          "frame": "double",
+          "description": "prismatic edge accents",
+          "accent": "#7B45D6",
+          "lightSurface": "#E3F7F3",
+          "darkSurface": "#193B3B"
+        },
+        {
+          "name": "liquid",
+          "frame": "classic",
+          "description": "fluid gradient accent",
+          "accent": "#00A6A6",
+          "lightSurface": "#FFE8EE",
+          "darkSurface": "#45243A"
+        }
+      ],
+      "rules": {
+        "title": "Readable bold title with icon/title spacing; accent color follows callout type or decorative style.",
+        "body": "Neutral high-contrast body text; never tint long paragraphs with the accent color.",
+        "nested": "Nested callouts use a distinct surface step and thinner border; avoid identical stacked frames.",
+        "mobile": "Full-width layout, wrapped titles, no horizontal overflow, comfortable padding and tap targets."
+      }
+    },
+    "tables": {
+      "header": {
+        "light": "deep violet with white text",
+        "dark": "deep plum-violet with warm-white text"
+      },
+      "body": "Alternating warm surfaces; thin visible borders; readable cell padding.",
+      "columnSemantics": [
+        "English",
+        "IPA / pronunciation",
+        "Translation",
+        "Example"
+      ],
+      "responsive": [
+        "Wrap long text and IPA.",
+        "Do not force fixed wide columns on Android.",
+        "Keep header labels legible when the table scrolls."
+      ],
+      "lightColumns": [
+        "#E2F5FF",
+        "#F5E8FF",
+        "#E2F8EA",
+        "#FFF0E2"
+      ],
+      "darkColumns": [
+        "#193A4B",
+        "#382348",
+        "#193D32",
+        "#482D25"
+      ]
+    },
+    "otherElements": {
+      "blockquote": "lavender-tinted surface with violet edge; preserve readable neutral text",
+      "horizontalRule": "warm coral divider with generous vertical spacing",
+      "bullets": "papaya/coral markers; nested list markers shift to violet/turquoise",
+      "checkbox": "clear checked/unchecked states with accessible contrast",
+      "links": "turquoise links, visible hover/focus state, underline on interaction",
+      "selection": "soft coral selection in Light; plum-magenta selection in Dark"
+    },
+    "accessibilityAndAndroid": {
+      "contrast": "Check WCAG contrast for every foreground/background pairing before production use.",
+      "touchTargets": "Aim for at least 44 CSS px for interactive controls where applicable.",
+      "smallScreens": "No fixed-width decorative layouts; preserve wrapping and vertical scrolling.",
+      "darkMode": "Dark colors are independently composed, not generated by mechanically inverting Light colors."
+    },
+    "validationChecklist": [
+      "All 30 semantic classes are present, including st-fo for full foreign words/phrases and st-lt for single foreign letters/graphemes and sequences.",
+      "st-tr translation and st-pr IPA/pronunciation remain visually distinct.",
+      "Light and Dark are both fully specified.",
+      "13 standard callout types and 14 aliases are listed.",
+      "All 32 decorative dictionary styles are listed.",
+      "Tables distinguish English, IPA, translation and example columns.",
+      "Check nested callouts, long notes, narrow Android screens, contrast and text wrapping.",
+      "Map descriptive design tokens to the actual ESDS 0.9.22 schema before attempting import."
+    ]
+  }
+}

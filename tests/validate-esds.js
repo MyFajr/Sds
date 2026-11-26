@@ -21,6 +21,7 @@ assert.ok(main.includes('paletteSchemaVersion > 4'));
 assert.ok(main.includes('async readPaletteZipEntries(buffer)'), 'ZIP importer must parse archive entries');
 assert.ok(main.includes('async pickPaletteZip(defaultCategory = null)'), 'ZIP importer must support category destination');
 assert.ok(main.includes('async exportPaletteCategoryZip(categoryName = null)'), 'category ZIP export must exist');
+assert.ok(main.includes("text: 'Объединить…'"), 'category manager must support merging categories');
 assert.ok(main.includes('skip'), 'duplicate-safe import behavior must be documented in code');
 assert.ok(main.includes('collection-manifest.json'), 'category ZIP export must include a collection manifest');
 assert.ok(main.includes("text: '⇧ ZIP-коллекция'"), 'palette toolbar must expose ZIP import');

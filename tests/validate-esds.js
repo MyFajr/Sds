@@ -67,7 +67,7 @@ assert.deepEqual(names, [
 'Tropical Dusk','Mango Noir','Flamingo Papaya','Emerald Island','Golden Maracuja'
 ]);
 
-const helperMatch = main.match(/function normalizePaletteTable\\(source\\) \\{[\\s\\S]*?(?=function makePaletteCss\\()/);
+const helperMatch = main.match(/function normalizePaletteTable\(source\) \{[\s\S]*?(?=function makePaletteCss\()/);
 assert.ok(helperMatch, 'palette table normalizer must exist');
 const helpers = vm.runInNewContext(
   helperMatch[0] + ';({ normalizePaletteTable, paletteTableCss })',

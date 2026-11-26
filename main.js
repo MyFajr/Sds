@@ -2446,6 +2446,10 @@ class DesignStudioModal extends Modal {
     createPalette.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const createBackground = actions.createEl('button', { cls: 'esds-button esds-btn-lime', text: '+ Создать фон', attr: { type: 'button' } });
     createBackground.addEventListener('click', () => new BackgroundBuilderModal(this.app, this).open());
+    const importPaletteZip = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт ZIP-коллекции', attr: { type: 'button' } });
+    importPaletteZip.addEventListener('click', () => this.pickPaletteZip(null));
+    const exportPaletteZip = actions.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ Экспорт категории ZIP', attr: { type: 'button' } });
+    exportPaletteZip.addEventListener('click', () => this.exportPaletteCategoryZip(null));
     const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитры', attr: { type: 'button' } });
     importPalette.addEventListener('click', () => this.pickJson('palette'));
     const importBackground = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт фона', attr: { type: 'button' } });
@@ -2490,6 +2494,10 @@ class DesignStudioModal extends Modal {
     const toolbar = parent.createDiv({ cls: 'esds-block-toolbar' });
     const createBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-violet', text: '＋ Создать палитру', attr: { type: 'button' } });
     createBtn.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
+    const zipImportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ ZIP-коллекция', attr: { type: 'button' } });
+    zipImportBtn.addEventListener('click', () => this.pickPaletteZip(this.paletteCategory || null));
+    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP категории', attr: { type: 'button' } });
+    zipExportBtn.addEventListener('click', () => this.exportPaletteCategoryZip(this.paletteCategory || null));
     const catBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Категории…', attr: { type: 'button' } });
     catBtn.addEventListener('click', () => this.openCategoryManager('palettes'));
     const search = parent.createEl('input', { cls: 'esds-text-input esds-palette-search', attr: { type: 'search', placeholder: 'Поиск по всем палитрам…' } });
@@ -3248,6 +3256,176 @@ class DesignStudioModal extends Modal {
     }
   }
 
+  async readPaletteZipEntries(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    let eocd = -1;
+    for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
+      if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('ZIP-архив не распознан: отсутствует каталог ZIP.');
+    const count = view.getUint16(eocd + 10, true);
+    const directoryOffset = view.getUint32(eocd + 16, true);
+    const entries = [];
+    let offset = directoryOffset;
+    for (let n = 0; n < count; n++) {
+      if (view.getUint32(offset, true) !== 0x02014b50) throw new Error('Повреждён центральный каталог ZIP.');
+      const method = view.getUint16(offset + 10, true);
+      const compressedSize = view.getUint32(offset + 20, true);
+      const uncompressedSize = view.getUint32(offset + 24, true);
+      const nameLength = view.getUint16(offset + 28, true);
+      const extraLength = view.getUint16(offset + 30, true);
+      const commentLength = view.getUint16(offset + 32, true);
+      const localOffset = view.getUint32(offset + 42, true);
+      const name = new TextDecoder().decode(bytes.slice(offset + 46, offset + 46 + nameLength));
+      offset += 46 + nameLength + extraLength + commentLength;
+      if (!name.toLowerCase().endsWith('.json') || name.endsWith('/')) continue;
+      if (view.getUint32(localOffset, true) !== 0x04034b50) continue;
+      const localNameLength = view.getUint16(localOffset + 26, true);
+      const localExtraLength = view.getUint16(localOffset + 28, true);
+      const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+      const compressed = bytes.slice(dataStart, dataStart + compressedSize);
+      let data;
+      if (method === 0) data = compressed;
+      else if (method === 8) {
+        if (typeof DecompressionStream === 'undefined') throw new Error('На этом WebView нет ZIP-дефлятора. Обнови Android System WebView и повтори импорт.');
+        let stream;
+        try { stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw')); }
+        catch (error) { throw new Error('WebView не поддерживает распаковку DEFLATE в ZIP.'); }
+        data = new Uint8Array(await new Response(stream).arrayBuffer());
+      } else continue;
+      if (uncompressedSize && data.length !== uncompressedSize) throw new Error(`Размер JSON ${name} после распаковки не совпал.`);
+      entries.push({ name, text: new TextDecoder().decode(data) });
+    }
+    return entries;
+  }
+  async pickPaletteZip(defaultCategory = null) {
+    const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.zip,application/zip' } });
+    input.style.display = 'none';
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0]; if (!file) { input.remove(); return; }
+      try {
+        const baseName = file.name.replace(/\\.zip$/i, '').trim() || 'Импортированная коллекция';
+        const entries = await this.readPaletteZipEntries(await file.arrayBuffer());
+        const candidates = [];
+        const errors = [];
+        for (const entry of entries) {
+          try {
+            const parsed = JSON.parse(entry.text);
+            const raw = parsed.palette || parsed;
+            if (!raw || typeof raw !== 'object' || !raw.name || !raw.roles || !LEGACY_ROLE_KEYS.every(key => isHexColor(raw.roles[key]))) continue;
+            const schema = Number(parsed.schemaVersion || 1);
+            if (!Number.isInteger(schema) || schema < 1 || schema > 4) throw new Error('версия палитры не поддерживается');
+            candidates.push({ file: entry.name, data: parsed, palette: raw });
+          } catch (error) { errors.push(`${entry.name}: ${error.message || 'ошибка JSON'}`); }
+        }
+        if (!candidates.length) throw new Error('В ZIP не найдено корректных JSON-палитр ESDS.');
+        const categories = this.getCategories('palettes') || [];
+        const names = categories.map(item => item.name);
+        let destination = defaultCategory && names.includes(defaultCategory) ? defaultCategory : null;
+        const promptText = `В архиве ${candidates.length} палитр.\\nКатегории: ${names.join(' · ')}\\n\\nВведи название существующей категории, чтобы добавить туда. Оставь поле пустым — будет создана новая категория «${baseName}» из имени ZIP-файла.`;
+        const choice = prompt(promptText, destination || '');
+        if (choice === null) return;
+        destination = choice.trim();
+        const createNew = !destination;
+        if (createNew) destination = baseName;
+        const categoryExists = names.some(name => name.toLocaleLowerCase() === destination.toLocaleLowerCase());
+        if (createNew && categoryExists) destination = baseName + ' (импорт)';
+        if (!createNew && !categoryExists) {
+          const createInstead = confirm(`Категории «${destination}» нет. Создать её?`);
+          if (!createInstead) return;
+        }
+        const existing = this.allPalettes();
+        const seenIds = new Set(existing.map(item => String(item.id || '').toLowerCase()));
+        const seenNames = new Set(existing.map(item => String(item.name || '').trim().toLowerCase()));
+        const unique = [];
+        let skipped = 0;
+        for (const item of candidates) {
+          const id = String(item.palette.id || '').toLowerCase();
+          const name = String(item.palette.name || '').trim().toLowerCase();
+          if ((id && seenIds.has(id)) || (name && seenNames.has(name))) { skipped++; continue; }
+          if (id) seenIds.add(id); if (name) seenNames.add(name); unique.push(item);
+        }
+        if (!unique.length) {
+          new Notice(`Импорт отменён: все ${skipped} палитр уже есть в библиотеке.`);
+          return;
+        }
+        if (!confirm(`Добавить ${unique.length} палитр в категорию «${destination}»?\\nДубликаты будут пропущены (${skipped}).`)) return;
+        const before = clone(this.plugin.userData);
+        try {
+          let categoryList = this.plugin.userData.categories.palettes || [];
+          if (!categoryList.some(item => item.name.toLocaleLowerCase() === destination.toLocaleLowerCase())) {
+            const baseId = slugify(destination) || 'palette-category';
+            let id = baseId, suffix = 2;
+            while (categoryList.some(item => item.id === id)) id = `${baseId}-${suffix++}`;
+            categoryList = [...categoryList, { id, name: destination, order: categoryList.length + 10, protected: false }];
+            this.plugin.userData.categories.palettes = categoryList;
+          }
+          let added = 0;
+          for (const item of unique) {
+            const payload = clone(item.data);
+            const p = payload.palette || payload;
+            p.category = destination;
+            payload.palette = p;
+            await this.importJson('palette', payload);
+            added++;
+          }
+          new Notice(`ZIP импортирован: добавлено ${added}, дубликатов пропущено ${skipped}, ошибок JSON ${errors.length}.`);
+          if (errors.length) console.warn('ESDS ZIP import: invalid JSON entries', errors);
+          this.paletteCategory = destination;
+          this.activeView = 'studio'; this.activeSection = 'palette'; this.render();
+        } catch (error) {
+          this.plugin.userData = before;
+          await this.plugin.saveUserLibrary();
+          this.plugin.refreshGeneratedStyles();
+          throw error;
+        }
+      } catch (error) {
+        console.error('ESDS ZIP import failed:', error);
+        new Notice(`ZIP импорт не выполнен: ${error.message || 'неизвестная ошибка'}`);
+      } finally { input.remove(); }
+    });
+    input.click();
+  }
+  async exportPaletteCategoryZip(categoryName = null) {
+    const all = this.allPalettes();
+    const categories = [...new Set(all.map(item => item.category || 'Мои палитры'))];
+    let category = categoryName && categories.includes(categoryName) ? categoryName : null;
+    if (!category) {
+      category = prompt(`Какую категорию экспортировать?\\n${categories.join(' · ')}`, categories[0] || '');
+      if (category === null || !category.trim()) return;
+      category = category.trim();
+    }
+    const items = all.filter(item => (item.category || 'Мои палитры') === category);
+    if (!items.length) { new Notice(`В категории «${category}» нет палитр.`); return; }
+    const encoder = new TextEncoder();
+    const files = items.map((item, index) => ({ name: `${String(index + 1).padStart(3, '0')}-${slugify(item.name || 'palette')}.json`, data: encoder.encode(JSON.stringify({ schemaVersion: 4, type: 'esds-palette', palette: item }, null, 2)) }));
+    files.push({ name: 'collection-manifest.json', data: encoder.encode(JSON.stringify({ type: 'esds-palette-collection', name: category, exportedAt: new Date().toISOString(), paletteCount: items.length }, null, 2)) });
+    const crc32 = data => {
+      let crc = -1;
+      for (const byte of data) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0); }
+      return (crc ^ -1) >>> 0;
+    };
+    const chunks = [], central = []; let offset = 0;
+    const push16 = (arr, value) => { arr.push(value & 255, (value >>> 8) & 255); };
+    const push32 = (arr, value) => { arr.push(value & 255, (value >>> 8) & 255, (value >>> 16) & 255, (value >>> 24) & 255); };
+    for (const file of files) {
+      const name = encoder.encode(file.name), data = file.data, crc = crc32(data);
+      const local = []; push32(local, 0x04034b50); push16(local, 20); push16(local, 0); push16(local, 0); push16(local, 0); push16(local, 0); push32(local, crc); push32(local, data.length); push32(local, data.length); push16(local, name.length); push16(local, 0);
+      chunks.push(new Uint8Array([...local, ...name, ...data]));
+      const c = []; push32(c, 0x02014b50); push16(c, 20); push16(c, 20); push16(c, 0); push16(c, 0); push16(c, 0); push16(c, 0); push32(c, crc); push32(c, data.length); push32(c, data.length); push16(c, name.length); push16(c, 0); push16(c, 0); push16(c, 0); push16(c, 0); push32(c, 0); push32(c, offset);
+      central.push(new Uint8Array([...c, ...name])); offset += local.length + name.length + data.length;
+    }
+    const centralLength = central.reduce((sum, chunk) => sum + chunk.length, 0);
+    const end = []; push32(end, 0x06054b50); push16(end, 0); push16(end, 0); push16(end, files.length); push16(end, files.length); push32(end, centralLength); push32(end, offset); push16(end, 0);
+    const archive = new Uint8Array(offset + centralLength + end.length); let cursor = 0;
+    for (const chunk of [...chunks, ...central, new Uint8Array(end)]) { archive.set(chunk, cursor); cursor += chunk.length; }
+    const adapter = this.app.vault.adapter, folder = 'ESDS Exports';
+    if (!(await adapter.exists(folder))) await adapter.mkdir(folder);
+    const path = `${folder}/${slugify(category) || 'palette-collection'}-${Date.now()}.zip`;
+    await adapter.writeBinary(path, archive.buffer);
+    new Notice(`ZIP категории сохранён: ${path} · ${items.length} палитр`);
+  }
   pickJson(kind) {
     const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.json,.esds-theme.json,application/json' } });
     input.style.display = 'none';

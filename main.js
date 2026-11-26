@@ -2375,7 +2375,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 250);
     });
     render();
   }
@@ -2543,7 +2543,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; runSearch(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; runSearch(); }, 250);
     });
     renderDirectory(search.value.trim().toLocaleLowerCase());
   }
@@ -2752,7 +2752,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 250);
     });
     render();
   }

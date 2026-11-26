@@ -2647,6 +2647,11 @@ class DesignStudioModal extends Modal {
     const tbody = table.createEl('tbody');
     const row = tbody.createEl('tr');
     ['Термин','Определение','Контекст'].forEach(text=>row.createEl('td',{text}));
+    const alternateRow = tbody.createEl('tr');
+    ['Пример','Пояснение','Употребление'].forEach(text=>alternateRow.createEl('td',{text}));
+    const selectedRow = tbody.createEl('tr');
+    selectedRow.addClass('is-selected');
+    ['Выбрано','Активная строка','Акцент'].forEach(text=>selectedRow.createEl('td',{text}));
     const list = articleSample.createEl('ul');
     ['Первый пункт списка','Второй пункт списка'].forEach(text=>list.createEl('li',{text}));
     const code = articleSample.createEl('pre');

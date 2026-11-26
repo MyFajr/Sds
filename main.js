@@ -2375,7 +2375,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 250);
     });
     render();
   }
@@ -2416,7 +2416,7 @@ class DesignStudioModal extends Modal {
     createPalette.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const createBackground = actions.createEl('button', { cls: 'esds-button esds-btn-lime', text: '+ Создать фон', attr: { type: 'button' } });
     createBackground.addEventListener('click', () => new BackgroundBuilderModal(this.app, this).open());
-    const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитры', attr: { type: 'button' } });
+    const importPalette = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт палитр (можно несколько)', attr: { type: 'button' } });
     importPalette.addEventListener('click', () => this.pickJson('palette'));
     const importBackground = actions.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ Импорт фона', attr: { type: 'button' } });
     importBackground.addEventListener('click', () => this.pickJson('background'));
@@ -2462,7 +2462,7 @@ class DesignStudioModal extends Modal {
     createBtn.addEventListener('click', () => new PaletteBuilderModal(this.app, this).open());
     const zipImportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-cyan', text: '⇧ ZIP-коллекция', attr: { type: 'button' } });
     zipImportBtn.addEventListener('click', () => this.pickPaletteZip(this.paletteCategory || null));
-    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP категории', attr: { type: 'button' } });
+    const zipExportBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-teal', text: '⇩ ZIP экспорт', attr: { type: 'button' } });
     zipExportBtn.addEventListener('click', () => this.exportPaletteCategoryZip(this.paletteCategory || null));
     const catBtn = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Категории…', attr: { type: 'button' } });
     catBtn.addEventListener('click', () => this.openCategoryManager('palettes'));
@@ -2543,7 +2543,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; runSearch(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; runSearch(); }, 250);
     });
     renderDirectory(search.value.trim().toLocaleLowerCase());
   }
@@ -2752,7 +2752,7 @@ class DesignStudioModal extends Modal {
     };
     search.addEventListener('input', () => {
       if (this._catalogSearchTimer) window.clearTimeout(this._catalogSearchTimer);
-      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 180);
+      this._catalogSearchTimer = window.setTimeout(() => { this._catalogSearchTimer = null; render(); }, 250);
     });
     render();
   }
@@ -3363,7 +3363,9 @@ class DesignStudioModal extends Modal {
               continue;
             }
             const raw = parsed && parsed.palette ? parsed.palette : parsed;
-            if (!raw || typeof raw !== 'object' || !raw.name || !raw.roles || !LEGACY_ROLE_KEYS.every(key => isHexColor(raw.roles[key]))) continue;
+            if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('в файле отсутствует объект палитры');
+            if (!raw.name) throw new Error('у палитры отсутствует название');
+            if (!raw.roles || typeof raw.roles !== 'object' || !ROLE_KEYS.every(key => isHexColor(raw.roles[key]))) throw new Error('неполные или неверные цветовые роли палитры ESDS');
             const schema = Number(parsed.schemaVersion || 1);
             if (!Number.isInteger(schema) || schema < 1 || schema > 4) throw new Error('версия палитры не поддерживается');
             candidates.push({ data: parsed, palette: raw });
@@ -3412,23 +3414,71 @@ class DesignStudioModal extends Modal {
   }
   async exportPaletteCategoryZip(categoryName = null) {
     const all = this.allPalettes();
-    const categories = [...new Set(all.map(item => item.category || 'Мои палитры'))];
-    const categoryNames = this.getCategories('palettes').map(item => item.name);
-    const choices = [...new Set([...categoryNames, ...categories])].map(name => ({ name }));
-    const choice = await this.choosePaletteCategory({
-      title: 'Экспорт ZIP-коллекции',
-      description: 'Выберите категорию палитр для экспорта.',
-      summary: 'Имя ZIP-файла будет сформировано автоматически из названия категории.',
-      suggestedName: categoryName || categories[0] || '',
-      categories: choices
+    if (!all.length) { new Notice('В библиотеке пока нет пользовательских палитр для экспорта.'); return; }
+    const selectedIds = await new Promise(resolve => {
+      let completed = false;
+      const selected = new Set(all
+        .filter(item => !categoryName || (item.category || 'Мои палитры') === categoryName)
+        .map(item => item.id));
+      const modal = new class extends Modal {
+        constructor(app) { super(app); }
+        finish(value) { if (completed) return; completed = true; this.close(); resolve(value); }
+        onOpen() { this.modalEl.addClass('esds-zip-export-modal'); this.contentEl.addClass('esds-zip-export-content'); this.renderPicker(); }
+        onClose() { this.contentEl.empty(); if (!completed) { completed = true; resolve(null); } }
+        renderPicker() {
+          const root = this.contentEl; root.empty();
+          root.createEl('h2', { text: 'Экспорт палитр в ZIP' });
+          root.createEl('p', { text: 'Отметь отдельные палитры или нажми «Выбрать всё». Все отмеченные палитры попадут в один ZIP-файл.' });
+          const toolbar = root.createDiv({ cls: 'esds-zip-export-toolbar' });
+          const count = toolbar.createEl('span', { cls: 'esds-zip-export-count' });
+          const updateCount = () => { count.textContent = 'Выбрано: ' + selected.size + ' из ' + all.length; };
+          const selectAll = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Выбрать всё', attr: { type: 'button' } });
+          selectAll.addEventListener('click', () => { all.forEach(item => selected.add(item.id)); this.renderPicker(); });
+          const clear = toolbar.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Снять выбор', attr: { type: 'button' } });
+          clear.addEventListener('click', () => { selected.clear(); this.renderPicker(); });
+          updateCount();
+          const list = root.createDiv({ cls: 'esds-zip-export-list' });
+          const groups = new Map();
+          all.forEach(item => {
+            const category = item.category || 'Мои палитры';
+            if (!groups.has(category)) groups.set(category, []);
+            groups.get(category).push(item);
+          });
+          [...groups.entries()].forEach(([category, items]) => {
+            const section = list.createDiv({ cls: 'esds-zip-export-group' });
+            section.createEl('strong', { text: category });
+            items.forEach(item => {
+              const row = section.createEl('label', { cls: 'esds-zip-export-row' + (selected.has(item.id) ? ' is-selected' : '') });
+              const checkbox = row.createEl('input', { attr: { type: 'checkbox' } });
+              checkbox.checked = selected.has(item.id);
+              const label = row.createSpan({ cls: 'esds-zip-export-label', text: item.name || item.id });
+              checkbox.addEventListener('change', () => { if (checkbox.checked) selected.add(item.id); else selected.delete(item.id); row.classList.toggle('is-selected', checkbox.checked); updateCount(); });
+            });
+          });
+          const actions = root.createDiv({ cls: 'esds-zip-export-actions' });
+          const cancel = actions.createEl('button', { cls: 'esds-button esds-btn-quiet', text: 'Отмена', attr: { type: 'button' } });
+          cancel.addEventListener('click', () => this.finish(null));
+          const exportBtn = actions.createEl('button', { cls: 'esds-button esds-primary esds-btn-teal', text: 'Экспортировать выбранные', attr: { type: 'button' } });
+          exportBtn.disabled = selected.size === 0;
+          exportBtn.addEventListener('click', () => this.finish([...selected]));
+        }
+      }(this.app);
+      modal.open();
     });
-    if (!choice) return;
-    const category = choice.name;
-    const items = all.filter(item => (item.category || 'Мои палитры') === category);
-    if (!items.length) { new Notice(`В категории «${category}» нет палитр.`); return; }
+    if (!selectedIds || !selectedIds.length) return;
+    const selectedSet = new Set(selectedIds);
+    const items = all.filter(item => selectedSet.has(item.id));
+    if (!items.length) { new Notice('Не выбраны палитры для экспорта.'); return; }
+    const categories = [...new Set(items.map(item => item.category || 'Мои палитры'))];
     const encoder = new TextEncoder();
-    const files = items.map((item, index) => ({ name: `${String(index + 1).padStart(3, '0')}-${slugify(item.name || 'palette')}.json`, data: encoder.encode(JSON.stringify({ schemaVersion: 4, type: 'esds-palette', palette: item }, null, 2)) }));
-    files.push({ name: 'collection-manifest.json', data: encoder.encode(JSON.stringify({ type: 'esds-palette-collection', name: category, exportedAt: new Date().toISOString(), paletteCount: items.length }, null, 2)) });
+    const files = items.map((item, index) => ({
+      name: `${String(index + 1).padStart(3, '0')}-${slugify(item.category || 'palette')}-${slugify(item.name || 'palette')}.json`,
+      data: encoder.encode(JSON.stringify({ schemaVersion: 4, type: 'esds-palette', palette: item }, null, 2))
+    }));
+    files.push({ name: 'collection-manifest.json', data: encoder.encode(JSON.stringify({
+      type: 'esds-palette-collection', name: categories.length === 1 ? categories[0] : 'Выбранные палитры',
+      categories, exportedAt: new Date().toISOString(), paletteCount: items.length
+    }, null, 2)) });
     const crc32 = data => {
       let crc = -1;
       for (const byte of data) { crc ^= byte; for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0); }
@@ -3450,42 +3500,73 @@ class DesignStudioModal extends Modal {
     for (const chunk of [...chunks, ...central, new Uint8Array(end)]) { archive.set(chunk, cursor); cursor += chunk.length; }
     const adapter = this.app.vault.adapter, folder = 'ESDS Exports';
     if (!(await adapter.exists(folder))) await adapter.mkdir(folder);
-    const path = `${folder}/${slugify(category) || 'palette-collection'}-${Date.now()}.zip`;
+    const fileName = `palettes-${items.length}-${Date.now()}.zip`;
+    const path = `${folder}/${fileName}`;
     await adapter.writeBinary(path, archive.buffer);
-    new Notice(`ZIP категории сохранён: ${path} · ${items.length} палитр`);
+    new Notice(`ZIP сохранён: ${path} · палитр: ${items.length}`);
   }
   pickJson(kind) {
-    const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.json,.esds-theme.json,application/json' } });
+    const input = this.contentEl.createEl('input', { attr: { type: 'file', accept: '.json,.esds-theme.json,application/json', ...(kind === 'palette' ? { multiple: 'multiple' } : {}) } });
     input.style.display = 'none';
     input.addEventListener('change', async () => {
-      const file = input.files && input.files[0]; if (!file) return;
+      const files = input.files ? Array.from(input.files) : [];
+      if (!files.length) { input.remove(); return; }
       try {
-        const raw = await file.text(), data = JSON.parse(raw);
         if (kind === 'palette') {
-          const palette = data && data.palette ? data.palette : data;
-          if (!palette || typeof palette !== 'object' || !palette.name) throw new Error('В JSON отсутствует название палитры.');
+          const parsedItems = [], errors = [];
+          for (const file of files) {
+            try {
+              const data = JSON.parse(await file.text());
+              const palette = data && data.palette ? data.palette : data;
+              if (!palette || typeof palette !== 'object' || Array.isArray(palette) || !palette.name) throw new Error('в JSON отсутствует название палитры');
+              if (!palette.roles || !ROLE_KEYS.every(key => isHexColor(palette.roles[key]))) throw new Error('неполные или неверные цветовые роли палитры ESDS');
+              const schema = Number(data.schemaVersion || 1);
+              if (!Number.isInteger(schema) || schema < 1 || schema > 4) throw new Error('версия формата палитры не поддерживается');
+              parsedItems.push({ data, palette, fileName: file.name });
+            } catch (error) { errors.push(file.name + ': ' + (error.message || 'ошибка JSON')); }
+          }
+          if (!parsedItems.length) throw new Error('Не найдено корректных JSON-палитр ESDS. ' + errors.slice(0, 3).join('; '));
+          const suggested = parsedItems.length === 1
+            ? String(parsedItems[0].palette.category || parsedItems[0].palette.name).trim()
+            : 'Импортированные палитры';
           const choice = await this.choosePaletteCategory({
-            title: 'Импорт одной палитры',
+            title: parsedItems.length === 1 ? 'Импорт одной палитры' : 'Импорт нескольких палитр',
             description: 'Выберите существующую категорию или создайте новую.',
-            summary: 'Палитра: ' + palette.name,
-            suggestedName: String(palette.category || palette.name).trim(),
+            summary: 'Корректных палитр: ' + parsedItems.length + (errors.length ? ' · пропущено файлов: ' + errors.length : ''),
+            suggestedName: suggested,
             categories: this.getCategories('palettes')
           });
           if (!choice) return;
+          const existing = this.allPalettes();
+          const ids = new Set(existing.map(item => String(item.id || '').toLowerCase()));
+          const names = new Set(existing.map(item => String(item.name || '').trim().toLowerCase()));
+          const unique = []; let skipped = 0;
+          parsedItems.forEach(item => {
+            const id = String(item.palette.id || '').toLowerCase(), name = String(item.palette.name || '').trim().toLowerCase();
+            if ((id && ids.has(id)) || (name && names.has(name))) { skipped++; return; }
+            if (id) ids.add(id); if (name) names.add(name); unique.push(item);
+          });
+          if (!unique.length) { new Notice('Все выбранные палитры уже есть в библиотеке.'); return; }
+          if (!confirm('Добавить ' + unique.length + ' палитр в категорию «' + choice.name + '»? Дубликаты будут пропущены (' + skipped + ').')) return;
           const before = clone(this.plugin.userData);
-          palette.category = choice.name;
-          data.palette = palette;
           try {
-            await this.ensurePaletteCategory(choice.name);
-            await this.importJson(kind, data);
+            const destination = await this.ensurePaletteCategory(choice.name);
+            for (const item of unique) {
+              const payload = clone(item.data), palette = payload.palette || payload;
+              palette.category = destination;
+              if (payload.palette) payload.palette = palette;
+              else payload.category = destination;
+              await this.importJson('palette', payload);
+            }
+            new Notice('Импорт завершён: добавлено ' + unique.length + ', дубликатов пропущено ' + skipped + ', ошибок файлов ' + errors.length + '.');
+            if (errors.length) console.warn('ESDS multi-file import: skipped files', errors);
+            this.paletteCategory = destination; this.activeView = 'studio'; this.activeSection = 'palette'; this.render();
           } catch (error) {
-            this.plugin.userData = before;
-            await this.plugin.saveUserLibrary();
-            this.plugin.refreshGeneratedStyles();
-            throw error;
+            this.plugin.userData = before; await this.plugin.saveUserLibrary(); this.plugin.refreshGeneratedStyles(); throw error;
           }
           return;
         }
+        const data = JSON.parse(await files[0].text());
         await this.importJson(kind, data);
       } catch (error) {
         console.error('ESDS import failed:', error);
